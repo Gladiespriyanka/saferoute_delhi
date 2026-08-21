@@ -62,7 +62,7 @@ const NOMINATIM = {
 
 // OpenRouteService - pedestrian routing
 const ORS = {
-  API_KEY: "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjQ2NWIwYjcyMDk1MzQ1NDM4N2Q0Mjg2NTI3MmM3ZThiIiwiaCI6Im11cm11cjY0In0=",
+  API_KEY: " ",
 
   ROUTE_URL:
     "https://api.openrouteservice.org/v2/directions/foot-walking/geojson",
