@@ -293,11 +293,34 @@ class SafeRouteService:
         for r in segment_results:
             all_adjustments.extend(r["context_adjustments"])
 
-        # Aggregate top contributions across segments (favor the worst segment).
-        top_contributions = segment_results[worst_idx]["feature_contributions"]
-        # Merge grouped reasons across all segments, de-duplicated, worst segment first.
+        # Explanations (top feature contributions + grouped reasons) are
+        # meant to say *why this particular route* carries the risk it
+        # does. But every alternative route between the same source and
+        # destination shares its first and last sampled point (see
+        # sampleRoutePoints() in frontend/api.js, which always keeps both
+        # endpoints) -- so whenever that shared endpoint happens to be the
+        # single riskiest point on the trip (a common case: a poorly-lit
+        # destination, say), it becomes `worst_idx` for every alternative
+        # route, and the explanation ends up identical across all of them
+        # even though the paths themselves differ. That defeats the whole
+        # point of comparing routes.
+        #
+        # Explanations are therefore drawn from the worst *interior*
+        # segment (excluding the shared start/end points) whenever the
+        # route has enough segments for "interior" to mean anything. The
+        # score itself is unaffected -- it still legitimately accounts for
+        # endpoint risk via worst_idx above, and worst_segment in the API
+        # response still reports the true worst point, endpoint or not.
+        if len(scores) > 2:
+            explain_idx = max(range(1, len(scores) - 1), key=lambda i: scores[i])
+        else:
+            explain_idx = worst_idx
+
+        # Aggregate top contributions across segments (favor the explanation segment).
+        top_contributions = segment_results[explain_idx]["feature_contributions"]
+        # Merge grouped reasons across all segments, de-duplicated, explanation segment first.
         merged_reasons = {"environment": [], "infrastructure": [], "history": [], "time": []}
-        ordered = [segment_results[worst_idx]] + [r for i, r in enumerate(segment_results) if i != worst_idx]
+        ordered = [segment_results[explain_idx]] + [r for i, r in enumerate(segment_results) if i != explain_idx]
         for r in ordered:
             for k, v in r["grouped_reasons"].items():
                 for item in v:
@@ -310,6 +333,7 @@ class SafeRouteService:
             "label": overall_label,
             "confidence": overall_confidence,
             "worst_segment_index": worst_idx,
+            "explain_segment_index": explain_idx,
             "segment_results": segment_results,
             "context_adjustments": all_adjustments,
             "top_feature_contributions": top_contributions,

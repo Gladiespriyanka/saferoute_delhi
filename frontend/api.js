@@ -41,7 +41,20 @@ async function geocode(place) {
     return { lat: parseFloat(coordMatch[1]), lon: parseFloat(coordMatch[3]) };
   }
 
-  const url = `${NOMINATIM.SEARCH}?format=jsonv2&q=${encodeURIComponent(place)}&limit=1&addressdetails=1`;
+  // viewbox + bounded=1 restricts results to Delhi/NCR instead of a plain
+  // global search — see the DELHI_BOUNDS comment in config.js for why
+  // this matters (a common place name can otherwise silently resolve to
+  // a same-named place in a totally different state).
+  const viewbox = [
+    DELHI_BOUNDS.LON_MIN,
+    DELHI_BOUNDS.LAT_MAX,
+    DELHI_BOUNDS.LON_MAX,
+    DELHI_BOUNDS.LAT_MIN,
+  ].join(",");
+
+  const url =
+    `${NOMINATIM.SEARCH}?format=jsonv2&q=${encodeURIComponent(place)}` +
+    `&limit=1&addressdetails=1&countrycodes=in&viewbox=${viewbox}&bounded=1`;
 
   const response = await fetchWithTimeout(url);
 
@@ -54,7 +67,10 @@ async function geocode(place) {
   const data = await response.json();
 
   if (data.length === 0) {
-    throw new Error("Location not found : " + place);
+    throw new Error(
+      `Could not find "${place}" in Delhi/NCR. Try a more specific name ` +
+        `(e.g. add the neighbourhood or landmark), or use "Use my current location".`,
+    );
   }
 
   return {

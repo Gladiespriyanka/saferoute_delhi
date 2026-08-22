@@ -53,6 +53,23 @@ const NOMINATIM = {
   REVERSE: "https://nominatim.openstreetmap.org/reverse",
 };
 
+// Delhi/NCR bounding box, matching DELHI_LAT_RANGE / DELHI_LON_RANGE in
+// app/config.py on the backend. Used to restrict geocoding results to
+// this area — without it, a plain free-text search for a common place
+// name (e.g. "Nawada", which is both a Delhi Metro-area locality AND an
+// entire district in Bihar) can resolve to the wrong city or state
+// entirely. Nominatim then happily returns *a* result, ORS fails to
+// find any routable point near it (since it's hundreds of km away), and
+// the error message ("Could not find routable point...") gives no hint
+// that the real problem was the place name resolving somewhere else in
+// India altogether.
+const DELHI_BOUNDS = {
+  LAT_MIN: 28.4,
+  LAT_MAX: 28.9,
+  LON_MIN: 76.85,
+  LON_MAX: 77.35,
+};
+
 // ---------- Routing ----------
 
 // OpenRouteService key resolution, mirroring resolveApiBaseUrl() above:
