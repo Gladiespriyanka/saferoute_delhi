@@ -13,8 +13,68 @@ let liveMarker = null;
 // list so we can clear them all between searches.
 let routeLines = {};
 
-const ROUTE_COLORS = ["#16a34a", "#2563eb", "#f59e0b", "#a855f7", "#0891b2"];
-const RISK_COLORS = { Safe: "#16a34a", Moderate: "#f59e0b", Unsafe: "#dc2626" };
+const ROUTE_COLORS = ["#d6336c", "#2563eb", "#f59e0b", "#8a1c46", "#0891b2"];
+const RISK_COLORS = { Safe: "#0e7c7b", Moderate: "#b54708", Unsafe: "#b42318" };
+
+/* ------------------------------
+   Custom pin icons
+
+   Source and destination previously used Leaflet's identical default
+   blue teardrop for both, so the two were impossible to tell apart at a
+   glance — and the live-location dot (also blue) landed right on top of
+   whichever one was closest, turning that corner of the map into a
+   cluster of same-colored blobs. These are shaped + colored differently
+   on purpose: a filled pin for source (brand pink), an outlined flag pin
+   for destination (dark), and a small pulsing dot (blue, defined in
+   style.css) for live GPS position.
+------------------------------ */
+
+function pinIcon(fillColor) {
+  const svg = `
+    <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 1C7.3 1 1 7.1 1 14.6 1 24.9 15 39 15 39s14-14.1 14-24.4C29 7.1 22.7 1 15 1Z"
+            fill="${fillColor}" stroke="#ffffff" stroke-width="2"/>
+      <circle cx="15" cy="14.5" r="5.2" fill="#ffffff"/>
+    </svg>
+  `;
+  return L.divIcon({
+    className: "srPin",
+    html: svg,
+    iconSize: [30, 40],
+    iconAnchor: [15, 39],
+    popupAnchor: [0, -36],
+  });
+}
+
+function flagIcon(fillColor) {
+  const svg = `
+    <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 1C7.3 1 1 7.1 1 14.6 1 24.9 15 39 15 39s14-14.1 14-24.4C29 7.1 22.7 1 15 1Z"
+            fill="${fillColor}" stroke="#ffffff" stroke-width="2"/>
+      <path d="M11.5 9v11" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M11.5 9.3h6.3l-1.7 2.6 1.7 2.6h-6.3Z" fill="#ffffff"/>
+    </svg>
+  `;
+  return L.divIcon({
+    className: "srPin",
+    html: svg,
+    iconSize: [30, 40],
+    iconAnchor: [15, 39],
+    popupAnchor: [0, -36],
+  });
+}
+
+function liveDotIcon() {
+  return L.divIcon({
+    className: "srLiveDotWrap",
+    html: `<div class="srLiveDot"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+const SOURCE_ICON = pinIcon("#d6336c"); // brand pink
+const DESTINATION_ICON = flagIcon("#1b0e14"); // near-black, reads as "end point"
 
 /* ------------------------------
    Initialize Map
@@ -39,7 +99,7 @@ window.onload = initMap;
 
 function setSourceMarker(lat, lon) {
   if (sourceMarker) map.removeLayer(sourceMarker);
-  sourceMarker = L.marker([lat, lon])
+  sourceMarker = L.marker([lat, lon], { icon: SOURCE_ICON, zIndexOffset: 500 })
     .addTo(map)
     .bindPopup("📍 Source")
     .openPopup();
@@ -51,22 +111,28 @@ function setSourceMarker(lat, lon) {
 
 function setDestinationMarker(lat, lon) {
   if (destinationMarker) map.removeLayer(destinationMarker);
-  destinationMarker = L.marker([lat, lon])
+  destinationMarker = L.marker([lat, lon], {
+    icon: DESTINATION_ICON,
+    zIndexOffset: 500,
+  })
     .addTo(map)
     .bindPopup("🏁 Destination");
 }
 
 /* ------------------------------
    Live User Location
+
+   Kept as a small pulsing dot (not a full pin) specifically so it reads
+   as "you are here" rather than competing with the source/destination
+   pins when they land close together.
 ------------------------------ */
 
 function showLiveLocation(lat, lon) {
   if (liveMarker) map.removeLayer(liveMarker);
-  liveMarker = L.circleMarker([lat, lon], {
-    radius: 8,
-    color: "#2563eb",
-    fillColor: "#3b82f6",
-    fillOpacity: 1,
+  liveMarker = L.marker([lat, lon], {
+    icon: liveDotIcon(),
+    zIndexOffset: 1000,
+    interactive: false,
   }).addTo(map);
 }
 

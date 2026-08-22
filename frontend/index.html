@@ -3,9 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SafeRoute Delhi — Route Safety Analysis</title>
-
-    <!-- Fonts -->
+    <title>SafeHerWay</title>
+    <meta
+      name="description"
+      content="SafeHerWay scores every route by real safety signals — lighting, crowd density, crime history, live weather and traffic — so you can choose a safer way, not just a faster one."
+    />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,252 +16,371 @@
       rel="stylesheet"
     />
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css" />
-
-    <!-- Leaflet -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="index.css" />
   </head>
 
   <body>
-    <div class="sidebar">
-      <div class="header">
-        <div class="brand">
-          <span class="brandMark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2.5 4 5.5v6c0 5.1 3.4 9.4 8 10.5 4.6-1.1 8-5.4 8-10.5v-6L12 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M8.5 12.2 11 14.7l4.7-5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <div>
-            <h1>SafeRoute Delhi</h1>
-            <p class="brandSub">Route safety analysis for after-dark travel</p>
+    <!-- ================= Nav ================= -->
+    <header class="nav">
+      <div class="wrap navInner">
+        <a class="navBrand" href="#top">
+          <span class="navBrandMark" aria-hidden="true">🌸</span>
+          SafeHerWay
+        </a>
+        <nav class="navLinks" aria-label="Page sections">
+          <a href="#how-it-works">How it works</a>
+          <a href="#safety-analysis">Safety analysis</a>
+          <a href="#route-comparison">Route comparison</a>
+          <a href="#emergency-safety">Emergency safety</a>
+        </nav>
+        <a class="navCta" href="app.html">Find a Safer Route</a>
+      </div>
+    </header>
+
+    <!-- ================= Hero ================= -->
+    <section class="hero" id="top">
+      <div class="wrap heroGrid">
+        <div class="reveal in">
+          <p class="eyebrow heroEyebrow">ROUTE SAFETY, SCORED</p>
+          <h1>Every Journey,<br />A Safer Way.</h1>
+          <p class="lead">
+            SafeHerWay scores every route you could take — not just the
+            fastest one — against lighting, crowd density, crime history,
+            and live weather and traffic. See the risk before you take the
+            first step.
+          </p>
+          <div class="heroActions">
+            <a class="btnPrimaryLg" href="app.html">
+              Find a Safer Route
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </a>
+            <a class="heroSecondaryLink" href="#how-it-works">See how it works</a>
+          </div>
+
+          <div class="heroStats">
+            <div class="heroStat">
+              <strong>6</strong>
+              <span>signals scored per segment</span>
+            </div>
+            <div class="heroStat">
+              <strong>3</strong>
+              <span>route alternatives compared</span>
+            </div>
+            <div class="heroStat">
+              <strong>1 tap</strong>
+              <span>to emergency contacts</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal in">
+          <div class="heroCard">
+            <div class="heroCardTop">
+              <span class="heroCardRoute">route_1 · Hauz Khas → GK II</span>
+              <span class="heroCardBadge">⭐ Recommended</span>
+            </div>
+            <div class="heroScoreRow">
+              <span class="heroScoreNum" id="heroScoreNum">0</span>
+              <span class="heroScoreLabel">/ 100 safety score</span>
+            </div>
+            <div class="heroMeterTrack">
+              <div class="heroMeterFill" id="heroMeterFill"></div>
+            </div>
+
+            <div class="heroSegments">
+              <div class="heroSegRow">
+                <span>📍 Hauz Khas Village</span>
+                <span>Safe · 14%</span>
+              </div>
+              <div class="heroSegRow mid">
+                <span>📍 Aurobindo Marg underpass</span>
+                <span>Moderate · 46%</span>
+              </div>
+              <div class="heroSegRow">
+                <span>📍 GK II market</span>
+                <span>Safe · 9%</span>
+              </div>
+            </div>
+
+            <div class="heroLiveRow">
+              <span class="heroLiveDot" aria-hidden="true"></span>
+              Live weather + traffic factored in
+            </div>
           </div>
         </div>
       </div>
+    </section>
 
-      <div class="form">
-        <label for="origin">Source</label>
-        <div class="inputWrap">
-          <svg class="inputIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <input id="origin" type="text" placeholder="Enter source location" />
-        </div>
-
-        <label for="destination">Destination</label>
-        <div class="inputWrap">
-          <svg class="inputIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M5 21V4.5M5 4.5h11.5L14 8l2.5 3.5H5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          </svg>
-          <input id="destination" type="text" placeholder="Enter destination" />
-        </div>
-
-        <label for="time">Travel time</label>
-        <div class="inputWrap">
-          <svg class="inputIcon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <input id="time" type="time" value="22:00" />
-        </div>
-
-        <button id="locationBtn" class="btn btnSecondary">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          Use my current location
-        </button>
-
-        <!-- ===== User-reported live context ===== -->
-        <div class="contextToggleRow">
-          <label class="switchLabel">
-            <input type="checkbox" id="reportConditions" />
-            <span class="switchTrack" aria-hidden="true"><span class="switchThumb"></span></span>
-            Report what you're seeing right now
-          </label>
-          <p class="hint">
-            Optional. Sliders below default to backend estimates. Turn this on to
-            override them with your own observations — applied to every stretch
-            of every route checked, and factored into the score.
+    <!-- ================= How it works ================= -->
+    <section class="section" id="how-it-works">
+      <div class="wrap">
+        <div class="sectionHead reveal">
+          <p class="eyebrow">HOW IT WORKS</p>
+          <h2>From two pins to a safer route, in four steps</h2>
+          <p>
+            No account, no setup. Enter where you're going and SafeHerWay
+            does the rest.
           </p>
         </div>
 
-        <div id="contextInputs" class="contextInputs hidden">
-          <div class="sliderRow">
-            <label for="lightingInput">Street lighting <span id="lightingVal">50%</span></label>
-            <input type="range" id="lightingInput" min="0" max="100" value="50" />
+        <div class="steps">
+          <div class="step reveal">
+            <span class="stepNum">1</span>
+            <h3>Enter your route</h3>
+            <p>Drop in a source and destination, or use your live location and pick a travel time.</p>
           </div>
-          <div class="sliderRow">
-            <label for="crowdInput">Crowd density <span id="crowdVal">50%</span></label>
-            <input type="range" id="crowdInput" min="0" max="100" value="50" />
+          <div class="step reveal">
+            <span class="stepNum">2</span>
+            <h3>We score every option</h3>
+            <p>Each alternative route is split into segments and scored against lighting, crowd density, CCTV coverage, footpath quality, and local crime data.</p>
           </div>
-          <div class="sliderRow">
-            <label for="cctvInput">CCTV coverage (your estimate) <span id="cctvVal">50%</span></label>
-            <input type="range" id="cctvInput" min="0" max="100" value="50" />
+          <div class="step reveal">
+            <span class="stepNum">3</span>
+            <h3>Live context adjusts it</h3>
+            <p>Current weather and traffic conditions nudge the score up or down in real time, not just historical averages.</p>
           </div>
-          <div class="sliderRow">
-            <label for="streetlightInput">Streetlight density <span id="streetlightVal">50%</span></label>
-            <input type="range" id="streetlightInput" min="0" max="100" value="50" />
-          </div>
-          <div class="sliderRow">
-            <label for="footpathInput">Footpath quality <span id="footpathVal">50%</span></label>
-            <input type="range" id="footpathInput" min="0" max="100" value="50" />
+          <div class="step reveal">
+            <span class="stepNum">4</span>
+            <h3>Travel with backup ready</h3>
+            <p>Emergency numbers and your trusted contact are one tap away for the whole trip.</p>
           </div>
         </div>
-
-        <button id="predictBtn" class="btn btnPrimary">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="m20 20-4.3-4.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Find safest route
-        </button>
       </div>
+    </section>
 
-      <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p id="loadingText">Analyzing route…</p>
-      </div>
-
-      <!-- ===== Route comparison (multiple alternatives) ===== -->
-      <div id="routeCompare" class="hidden">
-        <h3 class="sectionTitle">Route options</h3>
-        <div id="routeTabs" class="routeTabs"></div>
-      </div>
-
-      <div id="resultCard" class="hidden">
-        <h2 id="routeStatus">SAFE</h2>
-
-        <div class="card">
-          <h3>Safety score</h3>
-          <div class="scoreMeter">
-            <div class="scoreMeterTrack">
-              <div id="scoreMeterFill" class="scoreMeterFill"></div>
+    <!-- ================= Safety analysis ================= -->
+    <section class="section alt" id="safety-analysis">
+      <div class="wrap">
+        <div class="analysisGrid">
+          <div class="reveal">
+            <p class="eyebrow">SAFETY ANALYSIS</p>
+            <h2 style="font-family: var(--font-display); font-size: clamp(24px, 2.6vw, 32px); font-weight: 800; color: var(--navy); margin: 12px 0 14px; letter-spacing: -0.01em;">
+              What actually goes into a safety score
+            </h2>
+            <p style="color: var(--muted); font-size: 15px; max-width: 46ch;">
+              Every segment of a route is scored on real, explainable
+              signals — never a black box. You can see exactly which
+              factors pushed the score up or down.
+            </p>
+            <div class="chipRow">
+              <span class="chip">Street lighting</span>
+              <span class="chip">Crowd density</span>
+              <span class="chip">CCTV coverage</span>
+              <span class="chip">Footpath quality</span>
+              <span class="chip">Crime history</span>
+              <span class="chip">Live weather</span>
+              <span class="chip">Traffic congestion</span>
+              <span class="chip">Time of day</span>
             </div>
-            <h1 id="overallScore">0%</h1>
           </div>
-          <p id="riskScore" class="riskScore">Risk: 0%</p>
-          <p id="confidenceNote" class="confidenceNote"></p>
-        </div>
 
-        <div class="grid">
-          <div class="smallCard">
-            <span>Crime history</span>
-            <h3 id="crimeScore">—</h3>
+          <div class="reveal">
+            <div class="reasonsCard">
+              <h4>Why — top model drivers</h4>
+              <div class="reasonRow">
+                <span class="reasonArrow up">🔺</span>
+                <span>Low streetlight density along this stretch increases risk</span>
+              </div>
+              <div class="reasonRow">
+                <span class="reasonArrow down">🔻</span>
+                <span>High crowd density near the market lowers risk</span>
+              </div>
+              <div class="reasonRow">
+                <span class="reasonArrow up">🔺</span>
+                <span>Light rain forecast adds a small weather adjustment</span>
+              </div>
+              <div class="reasonRow">
+                <span class="reasonArrow down">🔻</span>
+                <span>A nearby police post shortens isolation distance</span>
+              </div>
+            </div>
           </div>
-          <div class="smallCard">
-            <span>Lighting</span>
-            <h3 id="lightingScore">—</h3>
-          </div>
-          <div class="smallCard">
-            <span>Crowd</span>
-            <h3 id="crowdScore">—</h3>
-          </div>
-        </div>
-
-        <!-- ===== Live external data status ===== -->
-        <div class="liveDataBox">
-          <h3>Live data used in this score</h3>
-          <ul id="liveDataList"></ul>
-        </div>
-
-        <!-- ===== Full model explanation ===== -->
-        <div class="reasonBox">
-          <h3>Why — top model drivers</h3>
-          <ul id="contributionList"></ul>
-        </div>
-
-        <div class="reasonBox">
-          <h3>Reasons</h3>
-          <div id="reasonGroups"></div>
-        </div>
-
-        <!-- ===== Per-segment breakdown ===== -->
-        <div class="reasonBox">
-          <h3>Segment-by-segment</h3>
-          <div id="segmentList" class="segmentList"></div>
-        </div>
-
-        <!-- ===== Crowdsourced audits ===== -->
-        <div class="reasonBox">
-          <h3>Community reports nearby</h3>
-          <p id="nearbyAuditsSummary">—</p>
-        </div>
-
-        <!-- ===== Feedback submission ===== -->
-        <div class="feedbackBox">
-          <h3>Rate current safety along this route</h3>
-          <div class="stars" id="starRating">
-            <span data-val="1">&#9733;</span><span data-val="2">&#9733;</span
-            ><span data-val="3">&#9733;</span><span data-val="4">&#9733;</span
-            ><span data-val="5">&#9733;</span>
-          </div>
-          <textarea
-            id="feedbackComment"
-            placeholder="Anything specific worth flagging? (optional)"
-            maxlength="500"
-          ></textarea>
-          <button id="submitFeedbackBtn" class="btn btnPrimary">Submit report</button>
-          <p id="feedbackStatus" class="feedbackStatus"></p>
         </div>
       </div>
+    </section>
 
-      <div class="sos">
-        <h3>Emergency</h3>
-        <a href="tel:112">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M12 2.5 4 5.5v6c0 5.1 3.4 9.4 8 10.5 4.6-1.1 8-5.4 8-10.5v-6L12 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          </svg>
-          Police — 112
-        </a>
-        <a href="tel:1091">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3c0 1-.9 1.8-1.9 1.6-7-1.3-12.4-6.7-13.7-13.7-.2-1 .6-1.9 1.6-1.9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          </svg>
-          Women helpline — 1091
-        </a>
-        <a href="tel:+919999999999">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="12" cy="8" r="3.3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          Trusted contact
-        </a>
+    <!-- ================= Route comparison ================= -->
+    <section class="section" id="route-comparison">
+      <div class="wrap">
+        <div class="sectionHead reveal">
+          <p class="eyebrow">ROUTE COMPARISON</p>
+          <h2>Compare every alternative, not just the fastest one</h2>
+          <p>
+            SafeHerWay requests multiple walking routes between your two
+            points and scores each one independently, so you can see the
+            trade-off between speed and safety at a glance.
+          </p>
+        </div>
+
+        <div class="routeCards">
+          <div class="routeCard recommended reveal">
+            <div class="routeCardTop">
+              <span>⭐ route 1</span>
+              <span class="routeBadge safe">Safe</span>
+            </div>
+            <div class="routeCardMeta">2.1 km · 26 min · risk 18%</div>
+            <div class="routeCardReason">Well-lit main road, steady foot traffic</div>
+            <div class="routeCardReason">Two police posts within 400m</div>
+          </div>
+
+          <div class="routeCard moderate reveal">
+            <div class="routeCardTop">
+              <span>route 2</span>
+              <span class="routeBadge moderate">Moderate</span>
+            </div>
+            <div class="routeCardMeta">1.8 km · 21 min · risk 41%</div>
+            <div class="routeCardReason">Shorter, but crosses an unlit underpass</div>
+            <div class="routeCardReason">Lower crowd density after 9 PM</div>
+          </div>
+
+          <div class="routeCard unsafe reveal">
+            <div class="routeCardTop">
+              <span>route 3</span>
+              <span class="routeBadge unsafe">Unsafe</span>
+            </div>
+            <div class="routeCardMeta">1.6 km · 19 min · risk 67%</div>
+            <div class="routeCardReason">Fastest option, but isolated stretch</div>
+            <div class="routeCardReason">Elevated incident history reported nearby</div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div id="map"></div>
+    <!-- ================= Emergency safety ================= -->
+    <section class="section alt" id="emergency-safety">
+      <div class="wrap">
+        <div class="emergencyGrid">
+          <div class="reveal">
+            <p class="eyebrow">EMERGENCY SAFETY</p>
+            <h2 style="font-family: var(--font-display); font-size: clamp(24px, 2.6vw, 32px); font-weight: 800; color: var(--navy); margin: 12px 0 14px; letter-spacing: -0.01em;">
+              Help is one tap away, the whole trip
+            </h2>
+            <p style="color: var(--muted); font-size: 15px; max-width: 46ch;">
+              A single button in the app opens emergency numbers instantly
+              — no digging through contacts while you're distracted or in
+              a hurry.
+            </p>
 
-    <!-- Config -->
-    <script src="config.js"></script>
-    <script src="config.local.js"></script>
-    <!-- Map -->
-    <script src="map.js"></script>
-    <!-- Backend -->
-    <script src="api.js"></script>
-    <!-- Main -->
-    <script src="app.js"></script>
+            <div class="emergencyList">
+              <div class="emergencyItem">
+                <span class="emergencyIcon" aria-hidden="true">📞</span>
+                <div>
+                  <h4>Police &amp; women's helpline, always visible</h4>
+                  <p>112 and 1091 are one tap away from every screen in the app.</p>
+                </div>
+              </div>
+              <div class="emergencyItem">
+                <span class="emergencyIcon" aria-hidden="true">👤</span>
+                <div>
+                  <h4>Save a trusted contact</h4>
+                  <p>Add, edit, or remove a personal emergency number any time — stored only on your device.</p>
+                </div>
+              </div>
+              <div class="emergencyItem">
+                <span class="emergencyIcon" aria-hidden="true">☎️</span>
+                <div>
+                  <h4>Real call support</h4>
+                  <p>Every number is a real tel: link — it opens your phone's dialer immediately, no extra steps.</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-    <!-- Syncs the decorative score meter to #overallScore without touching app.js -->
+          <div class="reveal">
+            <div class="sosGlassCard">
+              <p class="sosGlassTitle">Emergency</p>
+              <div class="sosGlassLink">
+                <span class="dot" aria-hidden="true"></span>
+                Police — 112
+              </div>
+              <div class="sosGlassLink">
+                <span class="dot" aria-hidden="true"></span>
+                Women helpline — 1091
+              </div>
+              <div class="sosGlassLink">
+                <span class="dot" style="background: var(--rose);" aria-hidden="true"></span>
+                Trusted contact — saved
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Final CTA ================= -->
+    <section class="ctaBand">
+      <div class="wrap">
+        <h2>Ready to see your route's real risk?</h2>
+        <p>Enter a source and destination and compare scored routes in seconds.</p>
+        <a class="btnPrimaryLg" href="app.html">
+          Find a Safer Route
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </a>
+        <p class="ctaFinePrint">Free to use. No sign-up required.</p>
+      </div>
+    </section>
+
+    <!-- ================= Footer ================= -->
+    <footer class="footer">
+      <div class="wrap footerInner">
+        <div class="footerBrand">
+          <span aria-hidden="true">🌸</span>
+          SafeHerWay
+        </div>
+        <div class="footerEmergency">
+          <a href="tel:112">Police — 112</a>
+          <a href="tel:1091">Women helpline — 1091</a>
+        </div>
+      </div>
+    </footer>
+
     <script>
-      (function () {
-        var scoreEl = document.getElementById("overallScore");
-        var fillEl = document.getElementById("scoreMeterFill");
-        if (!scoreEl || !fillEl) return;
-        function sync() {
-          var n = parseInt((scoreEl.textContent || "").replace(/[^\d]/g, ""), 10);
-          if (isNaN(n)) n = 0;
-          fillEl.style.width = Math.max(0, Math.min(100, n)) + "%";
+      // Hero score count-up + meter fill — the one signature motion
+      // moment on the page, tied directly to the product's own UI
+      // rather than generic decoration.
+      window.addEventListener("load", () => {
+        const numEl = document.getElementById("heroScoreNum");
+        const fillEl = document.getElementById("heroMeterFill");
+        if (!numEl || !fillEl) return;
+
+        const target = 82;
+        const duration = 1100;
+        const start = performance.now();
+
+        function tick(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          numEl.textContent = Math.round(eased * target);
+          fillEl.style.width = eased * target + "%";
+          if (t < 1) requestAnimationFrame(tick);
         }
-        new MutationObserver(sync).observe(scoreEl, { childList: true, characterData: true, subtree: true });
-        sync();
+        requestAnimationFrame(tick);
+      });
+
+      // Scroll-reveal for section content — one subtle treatment,
+      // applied consistently, not scattered per-element effects.
+      (function () {
+        const items = document.querySelectorAll(".reveal");
+        if (!("IntersectionObserver" in window) || !items.length) {
+          items.forEach((el) => el.classList.add("in"));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15 },
+        );
+        items.forEach((el) => io.observe(el));
       })();
     </script>
   </body>

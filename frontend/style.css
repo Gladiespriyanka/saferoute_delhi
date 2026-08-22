@@ -7,14 +7,16 @@
   --ink: #101828;
   --body-text: #344054;
   --muted: #667085;
-  --bg: #f5f6f8;
+  --bg: #faf6f8;
   --surface: #ffffff;
   --border: #e4e7ec;
   --border-strong: #d0d5dd;
 
   /* Brand */
-  --navy: #14304d;
-  --navy-2: #1d3a63;
+  --navy: #8a1c46;
+  --navy-2: #d6336c;
+  --brand-bg: #fff0f6;
+  --brand-soft: #fbe4ee;
 
   /* Status */
   --safe: #0e7c7b;
@@ -66,7 +68,8 @@ body {
   background: var(--navy);
   color: #ffffff;
   padding: 22px 24px;
-  border-bottom: 3px solid var(--safe);
+  border-bottom: 3px solid var(--navy-2);
+  position: relative;
 }
 
 .brand {
@@ -82,15 +85,11 @@ body {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.brandMark svg {
-  width: 22px;
-  height: 22px;
-  color: #ffffff;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 20px;
+  line-height: 1;
 }
 
 .header h1 {
@@ -104,6 +103,375 @@ body {
   margin-top: 2px;
   font-size: 12.5px;
   color: rgba(255, 255, 255, 0.72);
+}
+
+/* ================= Emergency: header icon + overlay panel ================= */
+
+.sosToggle {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(180, 35, 24, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.sosToggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.sosToggle:hover {
+  background: rgba(180, 35, 24, 0.32);
+}
+
+.sosToggle:active {
+  transform: translateY(1px);
+}
+
+.sosToggle.active {
+  background: var(--unsafe);
+  border-color: var(--unsafe);
+}
+
+.sosPanel {
+  position: absolute;
+  top: 68px;
+  right: 20px;
+  z-index: 1200;
+  width: 300px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: rgba(20, 48, 77, 0.62);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.35);
+}
+
+.sosPanel.hidden {
+  display: none;
+}
+
+.sosPanelInner {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sosPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.sosPulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff6b6b;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 rgba(255, 107, 107, 0.6);
+  animation: sosPulse 1.8s infinite;
+}
+
+@keyframes sosPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(255, 107, 107, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+  }
+}
+
+.sosPanel h3 {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ----- Emergency number grid (2x2), each item color-tinted by service
+   so Police / Women Helpline / Ambulance / Fire read as distinct
+   actions at a glance instead of four identical red pills. ----- */
+
+.sosGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.sosGridItem {
+  text-decoration: none;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.sosGridItem:hover {
+  transform: translateY(-1px);
+}
+
+.sosIconCircle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.sosIconCircle svg {
+  width: 15px;
+  height: 15px;
+}
+
+.sosGridText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sosGridLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.2;
+}
+
+.sosGridNumber {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.sosGridItem--police .sosIconCircle {
+  background: #2563eb;
+}
+.sosGridItem--police:hover {
+  background: rgba(37, 99, 235, 0.35);
+  border-color: #2563eb;
+}
+
+.sosGridItem--women .sosIconCircle {
+  background: var(--navy-2);
+}
+.sosGridItem--women:hover {
+  background: rgba(214, 51, 108, 0.35);
+  border-color: var(--navy-2);
+}
+
+.sosGridItem--medical .sosIconCircle {
+  background: #0e7c7b;
+}
+.sosGridItem--medical:hover {
+  background: rgba(14, 124, 123, 0.35);
+  border-color: #0e7c7b;
+}
+
+.sosGridItem--fire .sosIconCircle {
+  background: var(--unsafe);
+}
+.sosGridItem--fire:hover {
+  background: rgba(180, 35, 24, 0.35);
+  border-color: var(--unsafe);
+}
+
+/* ----- Share live location ----- */
+
+.sosShareBtn {
+  margin-top: 4px;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sosShareBtn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sosShareBtn:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.sosShareStatus {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: -2px;
+  min-height: 14px;
+}
+
+/* Visible, copyable fallback link — always shown once a fix is
+   obtained, so it's possible to confirm sharing worked even where
+   the native share sheet / SMS app isn't available (e.g. desktop
+   preview, embedded frame). */
+.sosShareLink {
+  display: block;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-top: -2px;
+  word-break: break-all;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+}
+
+.sosShareLink.hidden {
+  display: none;
+}
+
+.trustedContactBlock a {
+  text-decoration: none;
+  padding: 11px 13px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s ease;
+}
+
+.trustedContactBlock a svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.trustedContactBlock a:hover {
+  background: var(--unsafe);
+  border-color: var(--unsafe);
+}
+
+.trustedContactBlock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trustedContactBlock #trustedContactLink {
+  flex: 1;
+  min-width: 0;
+}
+
+.trustedContactBlock #trustedContactLink span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trustedContactEditBtn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.trustedContactEditBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.trustedContactEditBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.trustedContactForm {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.trustedContactForm.hidden {
+  display: none;
+}
+
+.trustedContactForm input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+}
+
+.trustedContactForm input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.trustedContactForm input:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.trustedContactForm button {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--navy-2);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trustedContactForm button:hover {
+  filter: brightness(1.1);
 }
 
 /* ================= Form ================= */
@@ -245,7 +613,22 @@ body {
   font-weight: 700;
   letter-spacing: 0.06em;
   margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
   color: var(--navy);
+}
+
+#routeStatus.status-Safe {
+  color: var(--safe-dark);
+  background: var(--safe-bg);
+}
+#routeStatus.status-Moderate {
+  color: var(--moderate);
+  background: var(--moderate-bg);
+}
+#routeStatus.status-Unsafe {
+  color: var(--unsafe);
+  background: var(--unsafe-bg);
 }
 
 .card {
@@ -405,17 +788,21 @@ body {
   border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1.5px solid var(--border);
+  border-left: 4px solid var(--routeAccent, var(--border-strong));
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .routeTab:hover {
   border-color: var(--border-strong);
+  border-left-color: var(--routeAccent, var(--border-strong));
 }
 
 .routeTab.active {
   border-color: var(--navy);
+  border-left-color: var(--routeAccent, var(--navy));
   background: #eef2f7;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.08);
 }
 
 .routeTabTop {
@@ -427,11 +814,45 @@ body {
   color: var(--ink);
 }
 
+.routeTabName {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.routeSwatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--routeAccent, var(--border-strong));
+  flex-shrink: 0;
+}
+
+.routeRankBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
 .routeTabMeta {
   margin-top: 4px;
   font-size: 12px;
   font-family: var(--font-mono);
   color: var(--muted);
+}
+
+.routeTabBar {
+  margin-top: 8px;
 }
 
 .routeTabLabel {
@@ -447,12 +868,15 @@ body {
 
 .label-Safe {
   color: var(--safe-dark);
+  background: var(--safe-bg);
 }
 .label-Moderate {
   color: var(--moderate);
+  background: var(--moderate-bg);
 }
 .label-Unsafe {
   color: var(--unsafe);
+  background: var(--unsafe-bg);
 }
 
 /* ================= Segment breakdown ================= */
@@ -464,8 +888,7 @@ body {
   margin-top: 4px;
 }
 
-.segmentRow,
-.segmentCard {
+.segmentRow {
   background: var(--surface);
   padding: 14px 15px;
   border-radius: var(--radius-sm);
@@ -473,21 +896,17 @@ body {
   border-left: 3px solid var(--border-strong);
 }
 
-.segmentRow.safe,
-.segmentCard.safe {
+.segmentRow.safe {
   border-left-color: var(--safe);
 }
-.segmentRow.moderate,
-.segmentCard.moderate {
+.segmentRow.moderate {
   border-left-color: var(--moderate);
 }
-.segmentRow.unsafe,
-.segmentCard.unsafe {
+.segmentRow.unsafe {
   border-left-color: var(--unsafe);
 }
 
-.segmentTop,
-.segmentHeader {
+.segmentTop {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -501,25 +920,21 @@ body {
   gap: 3px;
 }
 
-.segIndex,
-.segmentNumber {
+.segIndex {
   color: var(--muted);
   font-weight: 700;
   font-family: var(--font-mono);
   font-size: 12.5px;
 }
 
-.segArea,
-.segCoord,
-.segmentLocation {
+.segArea {
   color: var(--body-text);
   font-size: 13.5px;
   line-height: 1.35;
   font-family: var(--font-mono);
 }
 
-.segLabel,
-.segmentStatus {
+.segLabel {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -546,8 +961,7 @@ body {
   color: var(--ink);
 }
 
-.safetyBar,
-.segmentProgress {
+.safetyBar {
   width: 100%;
   height: 6px;
   margin-top: 12px;
@@ -556,23 +970,19 @@ body {
   overflow: hidden;
 }
 
-.safetyFill,
-.segmentProgressBar {
+.safetyFill {
   height: 100%;
   border-radius: 999px;
   transition: width 0.3s ease;
 }
 
-.safetyFill.safe,
-.segmentProgressBar.Safe {
+.safetyFill.safe {
   background: var(--safe);
 }
-.safetyFill.moderate,
-.segmentProgressBar.Moderate {
+.safetyFill.moderate {
   background: var(--moderate);
 }
-.safetyFill.unsafe,
-.segmentProgressBar.Unsafe {
+.safetyFill.unsafe {
   background: var(--unsafe);
 }
 
@@ -625,10 +1035,6 @@ body {
   display: block;
 }
 
-.routeDetails.hidden {
-  display: none;
-}
-
 .routeDetailSection {
   margin-bottom: 12px;
 }
@@ -671,7 +1077,126 @@ body {
   font-weight: 600;
 }
 
-/* ================= SOS ================= */
+/* ================= Community reports ================= */
+
+.communityBox {
+  padding: 18px;
+}
+
+.communityBoxHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.communityIconCircle {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-soft);
+  color: var(--navy);
+}
+
+.communityIconCircle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.communityBoxHeader h3 {
+  margin-bottom: 0;
+}
+
+.communityBoxSub {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.nearbyAuditsSummary {
+  font-size: 13px;
+  color: var(--body-text);
+}
+
+.communitySummaryLine {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.communitySummaryLine .avgBadge {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--safe-bg);
+  color: var(--safe-dark);
+}
+
+.communitySummaryLine .avgBadge.low {
+  background: var(--unsafe-bg);
+  color: var(--unsafe);
+}
+
+.communitySummaryLine .avgBadge.mid {
+  background: var(--moderate-bg);
+  color: var(--moderate);
+}
+
+.auditList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auditCard {
+  padding: 11px 13px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.auditCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.auditStars {
+  color: var(--moderate);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.auditDistance {
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.auditComment {
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--body-text);
+  line-height: 1.4;
+}
+
+.auditEmpty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ================= SOS (legacy sidebar block, unused when header toggle is active) ================= */
 
 .sos {
   margin: 20px 24px;
@@ -727,12 +1252,16 @@ body {
   border-radius: var(--radius-md);
 }
 
-.switchLabel {
+.contextToggleRow .switchLabel {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 0;
+  margin-bottom: 0;
   font-size: 13.5px;
   font-weight: 600;
+  text-transform: none;
   color: var(--ink);
   cursor: pointer;
 }
@@ -746,6 +1275,7 @@ body {
 
 .switchTrack {
   position: relative;
+  display: inline-block;
   width: 36px;
   height: 20px;
   border-radius: 999px;
@@ -817,32 +1347,121 @@ body {
   accent-color: var(--navy);
 }
 
-/* ================= Feedback ================= */
+/* ================= Feedback (collapsible) ================= */
 
 .feedbackBox {
   background: var(--surface);
-  padding: 18px;
   border-radius: var(--radius-md);
   margin-bottom: 20px;
   border: 1px solid var(--border);
+  overflow: hidden;
 }
 
-.feedbackBox h3 {
+.feedbackToggle {
+  width: 100%;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.feedbackToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.feedbackIconCircle {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-soft);
+  color: var(--navy);
+}
+
+.feedbackIconCircle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.feedbackToggleText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.feedbackToggleTitle {
   font-size: 13px;
   font-weight: 700;
   color: var(--ink);
 }
 
+.feedbackToggleHint {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.feedbackToggle .chev {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.feedbackToggle.open .chev {
+  transform: rotate(180deg);
+}
+
+.feedbackFormWrap {
+  padding: 0 18px 18px;
+}
+
+.feedbackFormWrap.hidden {
+  display: none;
+}
+
+.feedbackFieldLabel {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.feedbackFieldLabel:first-of-type {
+  margin-top: 2px;
+}
+
 .stars {
-  font-size: 24px;
+  font-size: 26px;
   color: var(--border-strong);
   cursor: pointer;
-  margin: 12px 0;
+  margin: 0 0 4px;
 }
 
 .stars span {
   margin-right: 4px;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, transform 0.1s ease;
+  display: inline-block;
+}
+
+.stars span:hover {
+  transform: scale(1.12);
 }
 
 .stars span.filled {
@@ -880,6 +1499,56 @@ body {
   height: 100vh;
 }
 
+/* Leaflet popup, re-themed to match the brand instead of default white/gray */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.22);
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 3px 10px rgba(16, 24, 40, 0.15);
+}
+
+/* Custom source / destination pin icons (see map.js) */
+.srPin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 3px 6px rgba(16, 24, 40, 0.35));
+}
+
+/* Live GPS location: small pulsing dot instead of a full pin, so it never
+   gets confused with the source/destination markers when they overlap. */
+.srLiveDot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 rgba(37, 99, 235, 0.5);
+  animation: liveDotPulse 2s infinite;
+}
+
+@keyframes liveDotPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
 /* ================= Mobile ================= */
 
 @media (max-width: 900px) {
@@ -895,4 +1564,274 @@ body {
   #map {
     height: 45%;
   }
+}
+/* ==========================================
+   CUSTOM CIRCULAR TIME PICKER
+========================================== */
+
+.timePickerWrap {
+    position: relative;
+}
+
+#time {
+    cursor: pointer;
+    padding-right: 50px;
+}
+
+.clockButton {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 34px;
+    height: 34px;
+
+    border: none;
+    background: transparent;
+
+    font-size: 24px;
+    color: #991b4b;
+
+    cursor: pointer;
+}
+
+.clockButton:hover {
+    transform: translateY(-50%) scale(1.08);
+}
+
+
+/* Dimmed backdrop behind the clock modal */
+
+.clockOverlay {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(10, 20, 35, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+
+    z-index: 1299;
+}
+
+.clockOverlay.hidden {
+    display: none;
+}
+
+
+/* Clock popup: a centered, glassmorphic modal so it can never be
+   pushed off-screen by its own content (AM/PM row, hint text, etc.) */
+
+.clockPicker {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 290px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+
+    background: rgba(20, 48, 77, 0.62);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+
+    border-radius: 20px;
+
+    padding: 18px;
+
+    box-shadow:
+        0 12px 32px rgba(16, 24, 40, 0.35);
+
+    z-index: 1300;
+}
+
+
+/* Header */
+
+.clockHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    margin-bottom: 6px;
+}
+
+.clockTimeDisplay {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: #ffffff;
+}
+
+.clockTimeDisplay span {
+    margin: 0 1px;
+}
+
+.ampmToggle {
+    display: flex;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    overflow: hidden;
+}
+
+.ampmBtn {
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ampmBtn.active {
+    background: #ffffff;
+    color: #14304d;
+}
+
+.clockHint {
+    text-align: center;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 12px;
+}
+
+
+/* Circular clock */
+
+.clockFace {
+    width: 230px;
+    height: 230px;
+
+    margin: auto;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    position: relative;
+
+    border: 2px solid rgba(255, 255, 255, 0.22);
+}
+
+
+/* Clock numbers */
+
+.clockNumber {
+    position: absolute;
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    border: none;
+
+    background: transparent;
+
+    color: rgba(255, 255, 255, 0.85);
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transform: translate(-50%, -50%);
+}
+
+.clockNumber:hover {
+    background: #ffffff;
+    color: #14304d;
+}
+
+.clockNumber.selected {
+    background: #ffffff;
+    color: #14304d;
+}
+
+
+/* Center circle */
+
+.clockCenter {
+    position: absolute;
+
+    width: 12px;
+    height: 12px;
+
+    background: #ffffff;
+
+    border-radius: 50%;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+}
+
+
+/* Clock hand */
+
+.clockHand {
+    position: absolute;
+
+    width: 2px;
+
+    height: 80px;
+
+    background: #ffffff;
+
+    left: 50%;
+    top: 50%;
+
+    transform-origin: bottom center;
+
+    transform: translate(-50%, -100%) rotate(0deg);
+}
+
+
+/* Buttons */
+
+.clockActions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 15px;
+}
+
+.clockActions button {
+    border: none;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    padding: 8px 12px;
+
+    border-radius: 8px;
+}
+
+.clockActions button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+
+/* Hidden */
+
+.clockPicker.hidden {
+    display: none;
 }

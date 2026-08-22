@@ -126,14 +126,23 @@ predictBtn.addEventListener("click", async function (e) {
 /* ==========================================
    Route comparison tabs
 ========================================== */
+// Same palette map.js uses for the polylines, so a route's card border
+// matches the line it draws on the map — one visual language instead of
+// two uncoordinated color systems.
+const ROUTE_ACCENT_COLORS = ["#d6336c", "#2563eb", "#f59e0b", "#8a1c46", "#0891b2"];
+
 function renderRouteTabs(scoredRoutes) {
   routeTabs.innerHTML = "";
   routeCompare.classList.remove("hidden");
 
-  scoredRoutes.forEach((s) => {
+  scoredRoutes.forEach((s, rank) => {
     const tab = document.createElement("div");
     tab.className = "routeTab";
     tab.dataset.routeId = s.routeId;
+    tab.style.setProperty(
+      "--routeAccent",
+      ROUTE_ACCENT_COLORS[rank % ROUTE_ACCENT_COLORS.length],
+    );
 
     const km = (s.route.distance / 1000).toFixed(1);
     const mins = Math.round(s.route.duration / 60);
@@ -164,6 +173,8 @@ function renderRouteTabs(scoredRoutes) {
     tab.innerHTML = `
       <div class="routeTabTop">
         <span class="routeTabName">
+          <span class="routeSwatch" aria-hidden="true"></span>
+          <span class="routeRankBadge">${rank + 1}</span>
           ${s.recommended ? "⭐ " : ""}
           ${s.routeId.replace("_", " ")}
         </span>
@@ -177,11 +188,18 @@ function renderRouteTabs(scoredRoutes) {
         ${km} km · ${mins} min · risk ${pct}%
       </div>
 
+      <div class="safetyBar routeTabBar">
+        <div
+          class="safetyFill ${s.prediction.label.toLowerCase()}"
+          style="width: ${100 - pct}%"
+        ></div>
+      </div>
+
       <button class="routeDetailsBtn" type="button">
         View safety details ▾
       </button>
 
-      <div class="routeDetails hidden">
+      <div class="routeDetails">
 
         <div class="routeDetailSection">
           <strong>Why this risk?</strong>
@@ -221,13 +239,13 @@ function renderRouteTabs(scoredRoutes) {
     detailsBtn.addEventListener("click", (e) => {
       e.stopPropagation();
 
-      const isHidden = details.classList.contains("hidden");
+      const isShown = details.classList.contains("show");
 
-      details.classList.toggle("hidden", !isHidden);
+      details.classList.toggle("show", !isShown);
 
-      detailsBtn.textContent = isHidden
-        ? "Hide safety details ▴"
-        : "View safety details ▾";
+      detailsBtn.textContent = isShown
+        ? "View safety details ▾"
+        : "Hide safety details ▴";
     });
 
     routeTabs.appendChild(tab);
@@ -254,51 +272,52 @@ window.selectRoute = function (routeId) {
   }
 };
 
+// Reverse-geocode with a small cache so re-scoring the same route (or the
+// same segment across route alternatives) doesn't re-hit Nominatim.
 const areaCache = new Map();
 
 async function getAreaName(lat, lon) {
+  const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
 
-    const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  if (areaCache.has(key)) {
+    return areaCache.get(key);
+  }
 
-    if (areaCache.has(key)) {
-        return areaCache.get(key);
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+      {
+        headers: {
+          "Accept-Language": "en",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Reverse geocoding failed");
     }
 
-    try {
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
-            {
-                headers: {
-                    "Accept-Language": "en"
-                }
-            }
-        );
+    const result = await response.json();
+    const address = result.address || {};
 
-        if (!response.ok) {
-            throw new Error("Reverse geocoding failed");
-        }
+    const areaName =
+      address.neighbourhood ||
+      address.suburb ||
+      address.quarter ||
+      address.city_district ||
+      address.town ||
+      address.city ||
+      "Area unavailable";
 
-        const result = await response.json();
-        const address = result.address || {};
+    areaCache.set(key, areaName);
 
-        const areaName =
-            address.neighbourhood ||
-            address.suburb ||
-            address.quarter ||
-            address.city_district ||
-            address.town ||
-            address.city ||
-            "Area unavailable";
-
-        areaCache.set(key, areaName);
-
-        return areaName;
-
-    } catch (error) {
-        console.error("Area lookup failed:", error);
-        return "Area unavailable";
-    }
+    return areaName;
+  } catch (error) {
+    console.error("Area lookup failed:", error);
+    return "Area unavailable";
+  }
 }
+
 /* ==========================================
    Display full prediction detail
 ========================================== */
@@ -318,10 +337,12 @@ async function showPrediction(data) {
   document.getElementById("confidenceNote").innerHTML =
     `Model confidence: ${Math.round(data.confidence * 100)}%`;
 
+  // Status color now comes from the shared design-token classes
+  // (label-Safe / label-Moderate / label-Unsafe) instead of one-off
+  // hex values, so it matches the route tabs and segment badges.
   const status = document.getElementById("routeStatus");
-  status.style.color =
-    { Safe: "#16a34a", Moderate: "#f59e0b", Unsafe: "#dc2626" }[data.label] ||
-    "#0f172a";
+  status.classList.remove("status-Safe", "status-Moderate", "status-Unsafe");
+  status.classList.add(`status-${data.label}`);
 
   // ----- Quick stat cards, read straight off the worst segment's feature
   // row so they reflect the actual scored inputs rather than being
@@ -408,62 +429,39 @@ async function showPrediction(data) {
     groupsEl.innerHTML = "<p>No notable flags for this route.</p>";
   }
 
-  async function getAreaName(lat, lon) {
-    try {
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
-            {
-                headers: {
-                    "Accept-Language": "en",
-                },
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error("Reverse geocoding failed");
-        }
-
-        const result = await response.json();
-        const address = result.address || {};
-
-        return (
-            address.neighbourhood ||
-            address.suburb ||
-            address.quarter ||
-            address.city_district ||
-            address.town ||
-            address.city ||
-            "Area unavailable"
-        );
-
-    } catch (error) {
-        console.error("Area lookup failed:", error);
-        return "Area unavailable";
-    }
-}
   // ==========================================
-// Segment-by-segment safety breakdown
-// ==========================================
+  // Segment-by-segment safety breakdown
+  //
+  // Uses the shared, cached getAreaName() above instead of a local
+  // re-declaration — that duplicate was silently shadowing the cache,
+  // so every segment (even repeats) re-hit Nominatim and re-waited out
+  // the throttle delay, which is what made this list feel like it was
+  // stuck rendering "duplicate" repeated lookups.
+  // ==========================================
 
-const segList = document.getElementById("segmentList");
-segList.innerHTML = "";
+  const segList = document.getElementById("segmentList");
+  segList.innerHTML = "";
 
-for (let i = 0; i < data.segment_scores.length; i++) {
-
+  for (let i = 0; i < data.segment_scores.length; i++) {
     const seg = data.segment_scores[i];
 
     const risk = Math.round(seg.risk_score * 100);
     const safety = 100 - risk;
 
-    // Get area name from coordinates
-    const areaName = await getAreaName(
-        seg.point.lat,
-        seg.point.lon
-    );
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    const key = `${seg.point.lat.toFixed(4)},${seg.point.lon.toFixed(4)}`;
+    const alreadyCached = areaCache.has(key);
+
+    const areaName = await getAreaName(seg.point.lat, seg.point.lon);
+
+    // Only throttle when we actually hit the network — cached lookups
+    // (repeated points, or re-rendering the same route) shouldn't pay
+    // the delay again.
+    if (!alreadyCached) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
 
     const row = document.createElement("div");
-    row.className = "segmentRow";
+    row.className = `segmentRow ${seg.label.toLowerCase()}`;
 
     row.innerHTML = `
         <div class="segmentTop">
@@ -486,6 +484,7 @@ for (let i = 0; i < data.segment_scores.length; i++) {
 
             <div class="segmentSafety">
                 <span>Safety</span>
+                <strong>${safety}%</strong>
             </div>
 
         </div>
@@ -504,7 +503,8 @@ for (let i = 0; i < data.segment_scores.length; i++) {
     `;
 
     segList.appendChild(row);
-}
+  }
+
   // ----- Nearby community audits for the riskiest point on this route -----
   loadNearbyAudits(worst.point.lat, worst.point.lon);
 
@@ -513,35 +513,64 @@ for (let i = 0; i < data.segment_scores.length; i++) {
   updateStars(0);
   document.getElementById("feedbackComment").value = "";
   document.getElementById("feedbackStatus").textContent = "";
+  const feedbackToggle = document.getElementById("feedbackToggle");
+  const feedbackFormWrap = document.getElementById("feedbackFormWrap");
+  if (feedbackToggle && feedbackFormWrap) {
+    feedbackFormWrap.classList.add("hidden");
+    feedbackToggle.classList.remove("open");
+    feedbackToggle.setAttribute("aria-expanded", "false");
+  }
 }
 
 /* ==========================================
    Nearby audits
 ========================================== */
 
+function starGlyphs(rating) {
+  const full = Math.round(rating);
+  return "★".repeat(full) + "☆".repeat(5 - full);
+}
+
 async function loadNearbyAudits(lat, lon) {
   const el = document.getElementById("nearbyAuditsSummary");
-  el.textContent = "Checking community reports...";
+  el.innerHTML = `<p class="auditEmpty">Checking community reports...</p>`;
   try {
     const res = await getNearbyAudits(lat, lon, 1.5);
+
     if (res.count === 0) {
-      el.textContent =
-        "No community reports within 1.5km of the riskiest point yet. Be the first to add one below.";
-    } else {
-      const avg =
-        res.audits.reduce((sum, a) => sum + a.rating, 0) / res.audits.length;
       el.innerHTML =
-        `${res.count} report(s) within 1.5km — average felt-safety rating ${avg.toFixed(1)}/5.` +
-        `<ul>${res.audits
-          .slice(0, 3)
-          .map(
-            (a) =>
-              `<li>${a.rating}/5${a.comment ? " — " + a.comment : ""} (${a.distance_km.toFixed(2)} km away)</li>`,
-          )
-          .join("")}</ul>`;
+        `<p class="auditEmpty">No community reports within 1.5km of the riskiest point yet. Be the first to add one below.</p>`;
+      return;
     }
+
+    const avg =
+      res.audits.reduce((sum, a) => sum + a.rating, 0) / res.audits.length;
+    const avgClass = avg >= 3.5 ? "" : avg >= 2.5 ? "mid" : "low";
+
+    const cards = res.audits
+      .slice(0, 3)
+      .map(
+        (a) => `
+          <div class="auditCard">
+            <div class="auditCardTop">
+              <span class="auditStars">${starGlyphs(a.rating)}</span>
+              <span class="auditDistance">${a.distance_km.toFixed(2)} km away</span>
+            </div>
+            ${a.comment ? `<p class="auditComment">${a.comment}</p>` : ""}
+          </div>
+        `,
+      )
+      .join("");
+
+    el.innerHTML = `
+      <div class="communitySummaryLine">
+        <span class="avgBadge ${avgClass}">${avg.toFixed(1)}/5</span>
+        <span>${res.count} report${res.count === 1 ? "" : "s"} within 1.5km</span>
+      </div>
+      <div class="auditList">${cards}</div>
+    `;
   } catch (err) {
-    el.textContent = "Could not load community reports right now.";
+    el.innerHTML = `<p class="auditEmpty">Could not load community reports right now.</p>`;
   }
 }
 
@@ -619,3 +648,256 @@ window.addEventListener("load", async () => {
 ========================================== */
 
 startTracking();
+
+/* ==========================================
+   CUSTOM CIRCULAR TIME PICKER
+========================================== */
+
+const timeInput = document.getElementById("time");
+const openClock = document.getElementById("openClock");
+const clockPicker = document.getElementById("clockPicker");
+const clockOverlay = document.getElementById("clockOverlay");
+const clockFace = document.getElementById("clockFace");
+
+const selectedHourEl = document.getElementById("selectedHour");
+const selectedMinuteEl = document.getElementById("selectedMinute");
+const ampmButtons = document.querySelectorAll(".ampmBtn");
+
+const clockDone = document.getElementById("clockDone");
+const clockCancel = document.getElementById("clockCancel");
+
+// State is kept in 12-hour form (1-12) + AM/PM. The dial itself only ever
+// shows 12 numbers, so without an explicit AM/PM control there was no way
+// to reach 13:00-23:59 or 00:00-00:59 by clicking — only whatever hour
+// happened to be hardcoded as the default. The #time input and header
+// still display/store the real 24-hour "HH:MM" the backend expects.
+let selectedHour12 = 10;
+let selectedPeriod = "PM";
+let selectedM = 0;
+
+let selectingMinutes = false;
+
+function to24Hour(hour12, period) {
+    let h = hour12 % 12;
+    if (period === "PM") h += 12;
+    return h;
+}
+
+function from24Hour(hour24) {
+    const period = hour24 >= 12 ? "PM" : "AM";
+    let hour12 = hour24 % 12;
+    if (hour12 === 0) hour12 = 12;
+    return { hour12, period };
+}
+
+function refreshClockHeader() {
+    const hour24 = to24Hour(selectedHour12, selectedPeriod);
+
+    selectedHourEl.textContent = String(hour24).padStart(2, "0");
+    selectedMinuteEl.textContent = String(selectedM).padStart(2, "0");
+
+    ampmButtons.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.period === selectedPeriod);
+    });
+}
+
+/* ------------------------------------------
+   Create clock numbers
+------------------------------------------ */
+
+function createClockNumbers() {
+
+    clockFace.innerHTML = "";
+
+    const numbers = selectingMinutes
+        ? [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+        : [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+    numbers.forEach((number, index) => {
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+
+        button.className = "clockNumber";
+
+        button.textContent =
+            selectingMinutes
+                ? String(number).padStart(2, "0")
+                : number;
+
+        const isSelected = selectingMinutes
+            ? number === selectedM
+            : number === selectedHour12;
+
+        button.classList.toggle("selected", isSelected);
+
+        const angle = index * 30;
+
+        const radius = 88;
+
+        const center = 115;
+
+        const x =
+            center +
+            radius * Math.sin(angle * Math.PI / 180);
+
+        const y =
+            center -
+            radius * Math.cos(angle * Math.PI / 180);
+
+        button.style.left = `${x}px`;
+        button.style.top = `${y}px`;
+
+        button.addEventListener("click", (event) => {
+
+            // The document-level "click outside closes the picker" listener
+            // checks whether the click target is still inside #clockPicker.
+            // But selecting a number rebuilds the whole dial right here
+            // (innerHTML wipe below), which detaches this very button from
+            // the DOM mid-bubble — so without stopping propagation, that
+            // outside-click check sees a detached node and closes the
+            // picker on every single tap.
+            event.stopPropagation();
+
+            if (selectingMinutes) {
+
+                selectedM = number;
+
+                refreshClockHeader();
+                createClockNumbers();
+
+            } else {
+
+                selectedHour12 = number;
+
+                selectingMinutes = true;
+
+                refreshClockHeader();
+                createClockNumbers();
+            }
+
+        });
+
+        clockFace.appendChild(button);
+    });
+
+
+    /* Center dot */
+
+    const centerDot = document.createElement("div");
+
+    centerDot.className = "clockCenter";
+
+    clockFace.appendChild(centerDot);
+}
+
+
+/* ------------------------------------------
+   AM / PM toggle — this is what actually
+   unlocks the full 24-hour range, since the
+   dial alone can only ever express 1-12.
+------------------------------------------ */
+
+ampmButtons.forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectedPeriod = btn.dataset.period;
+        refreshClockHeader();
+    });
+});
+
+
+/* ------------------------------------------
+   Open clock
+------------------------------------------ */
+
+openClock.addEventListener("click", () => {
+
+    const current = timeInput.value || "22:00";
+
+    const [h, m] = current.split(":").map(Number);
+
+    const parsed = from24Hour(isNaN(h) ? 22 : h);
+    selectedHour12 = parsed.hour12;
+    selectedPeriod = parsed.period;
+    selectedM = isNaN(m) ? 0 : m;
+
+    selectingMinutes = false;
+
+    refreshClockHeader();
+    createClockNumbers();
+
+    clockPicker.classList.remove("hidden");
+    clockOverlay.classList.remove("hidden");
+});
+
+
+/* ------------------------------------------
+   Click time field also opens clock
+------------------------------------------ */
+
+timeInput.addEventListener("click", () => {
+
+    openClock.click();
+
+});
+
+
+/* ------------------------------------------
+   Close on outside click (dial stays open
+   for AM/PM + hour + minute picks, only
+   dismissed by Done/Cancel/clicking away)
+------------------------------------------ */
+
+document.addEventListener("click", (e) => {
+    if (clockPicker.classList.contains("hidden")) return;
+    if (
+        clockPicker.contains(e.target) ||
+        openClock.contains(e.target) ||
+        timeInput.contains(e.target)
+    ) {
+        return;
+    }
+    clockPicker.classList.add("hidden");
+    clockOverlay.classList.add("hidden");
+});
+
+
+/* ------------------------------------------
+   Also close when tapping the dimmed backdrop
+------------------------------------------ */
+
+clockOverlay.addEventListener("click", () => {
+    clockPicker.classList.add("hidden");
+    clockOverlay.classList.add("hidden");
+});
+
+
+/* ------------------------------------------
+   Done
+------------------------------------------ */
+
+clockDone.addEventListener("click", () => {
+
+    const hour24 = to24Hour(selectedHour12, selectedPeriod);
+
+    timeInput.value =
+        `${String(hour24).padStart(2, "0")}:${String(selectedM).padStart(2, "0")}`;
+
+    clockPicker.classList.add("hidden");
+    clockOverlay.classList.add("hidden");
+
+});
+
+
+/* ------------------------------------------
+   Cancel
+------------------------------------------ */
+
+clockCancel.addEventListener("click", () => {
+
+    clockPicker.classList.add("hidden");
+    clockOverlay.classList.add("hidden");
+
+});

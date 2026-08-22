@@ -72,6 +72,14 @@ async function geocode(place) {
 ------------------------------------------*/
 
 async function getRoutes(source, destination) {
+  if (!ORS.API_KEY) {
+    throw new Error(
+      "OpenRouteService API key is not configured. Copy " +
+        "frontend/config.local.example.js to frontend/config.local.js and add your key, " +
+        "or reload this page with ?ors_key=YOUR_KEY appended to the URL.",
+    );
+  }
+
   const response = await fetch(ORS.ROUTE_URL, {
     method: "POST",
 
@@ -86,6 +94,7 @@ async function getRoutes(source, destination) {
         [destination.lon, destination.lat],
       ],
 
+      // Ask for alternative routes
       alternative_routes: {
         target_count: 3,
         weight_factor: 1.4,
@@ -96,6 +105,58 @@ async function getRoutes(source, destination) {
 
   if (!response.ok) {
     const errorText = await response.text();
+
+    // If ORS rejects alternative routes because the
+    // route is too long, try a normal route instead.
+    if (response.status === 400 && errorText.includes("alternative Routes")) {
+      console.warn(
+        "Alternative routes unavailable for this distance. Trying normal route...",
+      );
+
+      const fallbackResponse = await fetch(ORS.ROUTE_URL, {
+        method: "POST",
+
+        headers: {
+          Authorization: ORS.API_KEY,
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          coordinates: [
+            [source.lon, source.lat],
+            [destination.lon, destination.lat],
+          ],
+        }),
+      });
+
+      if (!fallbackResponse.ok) {
+        const fallbackError = await fallbackResponse.text();
+
+        throw new Error(
+          `Pedestrian routing failed (${fallbackResponse.status}): ${fallbackError}`,
+        );
+      }
+
+      const fallbackData = await fallbackResponse.json();
+
+      if (!fallbackData.features || fallbackData.features.length === 0) {
+        throw new Error("No pedestrian route found");
+      }
+
+      return fallbackData.features.map((feature) => {
+        const summary = feature.properties.summary;
+
+        return {
+          distance: summary.distance,
+          duration: summary.duration,
+
+          coordinates: feature.geometry.coordinates.map(([lon, lat]) => [
+            lat,
+            lon,
+          ]),
+        };
+      });
+    }
 
     throw new Error(
       `Pedestrian routing failed (${response.status}): ${errorText}`,
@@ -175,14 +236,18 @@ function buildSegments(coordinates, userContext) {
    detail: segment scores, live-context
    adjustments, feature contributions,
    grouped reasons, confidence).
+
+   Takes already-built `segments` (rather than raw coordinates) so the
+   exact same segment list can be reused for the /compare-routes call
+   below without re-sampling/re-applying user context twice.
 ------------------------------------------*/
 
-async function predictSafety(routeId, coordinates, timestamp, userContext) {
+async function predictSafety(routeId, segments, timestamp) {
   const payload = {
     route_id: routeId,
     timestamp: timestamp || new Date().toISOString(),
     use_live_context: true,
-    segments: buildSegments(coordinates, userContext),
+    segments,
   };
 
   const response = await fetchWithTimeout(API.BASE_URL + "/predict", {
@@ -213,31 +278,145 @@ async function predictSafety(routeId, coordinates, timestamp, userContext) {
 }
 
 /* -----------------------------------------
+   Ask the backend which route it recommends
+   across >=2 alternatives in one call. This
+   is what /compare-routes is actually for —
+   previously the frontend never called it
+   and instead re-derived "recommended" by
+   sorting the per-route /predict results by
+   overall_risk_score itself, duplicating
+   logic that already lives (and is tested)
+   server-side in SafeRouteService.compare_routes().
+
+   Note: /compare-routes only returns summary
+   scores, not segment-level detail, so this
+   does NOT replace the per-route /predict
+   calls above (the route-tab UI needs their
+   segment scores/reasons/contributions) — it
+   runs alongside them purely to source the
+   recommendation from a single source of
+   truth instead of two.
+------------------------------------------*/
+
+async function compareRoutes(routesMap, timestamp) {
+  const payload = {
+    routes: routesMap,
+    timestamp: timestamp || new Date().toISOString(),
+    use_live_context: true,
+  };
+
+  const response = await fetchWithTimeout(API.BASE_URL + "/compare-routes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": API.API_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    let detail = response.statusText;
+    try {
+      const error = await response.json();
+      detail = error.detail
+        ? JSON.stringify(error.detail)
+        : JSON.stringify(error);
+    } catch (_) {
+      // response body wasn't JSON; fall back to statusText
+    }
+    throw new Error(`Route comparison failed (${response.status}): ${detail}`);
+  }
+
+  return await response.json();
+}
+
+/* -----------------------------------------
    Score every alternative route in parallel
    and return them sorted safest-first, each
    tagged with its own map polyline data.
 ------------------------------------------*/
-
 async function analyzeRoutes(routes, timestamp, userContext) {
+  const routeIds = routes.map((_, i) => `route_${i + 1}`);
+
+  // Build the exact segment format expected by the backend
+  const segmentsByRoute = routes.map((route) =>
+    buildSegments(route.coordinates, userContext)
+  );
+
+  // -----------------------------------------
+  // A. Get detailed prediction for each route
+  // -----------------------------------------
   const scored = await Promise.all(
-    routes.map((route, i) =>
-      predictSafety(
-        `route_${i + 1}`,
-        route.coordinates,
-        timestamp,
-        userContext,
+    routes.map((route, i) => {
+      const routeId = routeIds[i];
+
+      return predictSafety(
+        routeId,
+        segmentsByRoute[i],
+        timestamp
       ).then((prediction) => ({
-        routeId: `route_${i + 1}`,
+        routeId,
         route,
         prediction,
-      })),
-    ),
+        recommended: false
+      }));
+    })
   );
 
+  // -----------------------------------------
+  // B. Ask backend to compare all routes
+  // -----------------------------------------
+  let comparison = null;
+
+  try {
+    const routesMap = {};
+
+    routeIds.forEach((routeId, i) => {
+      routesMap[routeId] = segmentsByRoute[i];
+    });
+
+    comparison = await compareRoutes(
+      routesMap,
+      timestamp
+    );
+
+    console.log("COMPARE ROUTES RESULT:", comparison);
+
+    // Backend recommendation
+    const recommendedRoute =
+      comparison.recommended_route;
+
+    scored.forEach((item) => {
+      item.recommended =
+        item.routeId === recommendedRoute;
+    });
+
+  } catch (error) {
+    console.warn(
+      "Compare-routes unavailable:",
+      error.message
+    );
+
+    // Fallback — don't break the application
+    // Lowest risk score remains recommended.
+    scored.sort(
+      (a, b) =>
+        a.prediction.overall_risk_score -
+        b.prediction.overall_risk_score
+    );
+
+    scored.forEach((item, index) => {
+      item.recommended = index === 0;
+    });
+  }
+
+  // Keep safest/recommended route first
   scored.sort(
-    (a, b) => a.prediction.overall_risk_score - b.prediction.overall_risk_score,
+    (a, b) =>
+      a.prediction.overall_risk_score -
+      b.prediction.overall_risk_score
   );
-  scored.forEach((s, i) => (s.recommended = i === 0));
+
   return scored;
 }
 

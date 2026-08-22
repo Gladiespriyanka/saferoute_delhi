@@ -1,4 +1,4 @@
-# SafeRoute Delhi
+# 🌸 SafeHerWay
 
 Context-aware ML system that scores pedestrian route safety (**Safe / Moderate / Unsafe**)
 using lighting, crowd density, infrastructure quality, time-of-day, historical crime risk,

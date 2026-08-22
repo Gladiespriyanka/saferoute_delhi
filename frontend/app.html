@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SafeHerWay</title>
+
+    <!-- Fonts -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </head>
+
+  <body>
+    <div class="sidebar">
+      <div class="header">
+        <div class="brand">
+          <span class="brandMark" aria-hidden="true">🌸</span>
+          <div>
+            <h1>SafeHerWay</h1>
+            <p class="brandSub">Every Journey, A Safer Way.</p>
+          </div>
+        </div>
+
+        <button
+          id="sosToggle"
+          class="sosToggle"
+          type="button"
+          aria-label="Emergency contacts"
+          aria-expanded="false"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3c0 1-.9 1.8-1.9 1.6-7-1.3-12.4-6.7-13.7-13.7-.2-1 .6-1.9 1.6-1.9Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+
+        <div id="sosPanel" class="sosPanel hidden">
+          <div class="sosPanelInner">
+            <div class="sosPanelHeader">
+              <span class="sosPulseDot" aria-hidden="true"></span>
+              <h3>Emergency</h3>
+            </div>
+
+            <div class="sosGrid">
+              <a href="tel:112" class="sosGridItem sosGridItem--police">
+                <span class="sosIconCircle">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 2.5 4 5.5v6c0 5.1 3.4 9.4 8 10.5 4.6-1.1 8-5.4 8-10.5v-6L12 2.5Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="sosGridText">
+                  <span class="sosGridLabel">Police</span>
+                  <span class="sosGridNumber">112</span>
+                </span>
+              </a>
+
+              <a href="tel:1091" class="sosGridItem sosGridItem--women">
+                <span class="sosIconCircle">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M6.5 3.5h3l1.5 4-2 1.5a12 12 0 0 0 6 6l1.5-2 4 1.5v3c0 1-.9 1.8-1.9 1.6-7-1.3-12.4-6.7-13.7-13.7-.2-1 .6-1.9 1.6-1.9Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="sosGridText">
+                  <span class="sosGridLabel">Women Helpline</span>
+                  <span class="sosGridNumber">1091</span>
+                </span>
+              </a>
+
+              <a href="tel:102" class="sosGridItem sosGridItem--medical">
+                <span class="sosIconCircle">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 3v7M12 21v-7M4 12h7M20 12h-7"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    />
+                    <rect
+                      x="3.5"
+                      y="3.5"
+                      width="17"
+                      height="17"
+                      rx="4.5"
+                      stroke="currentColor"
+                      stroke-width="1.4"
+                    />
+                  </svg>
+                </span>
+                <span class="sosGridText">
+                  <span class="sosGridLabel">Ambulance</span>
+                  <span class="sosGridNumber">102</span>
+                </span>
+              </a>
+
+              <a href="tel:101" class="sosGridItem sosGridItem--fire">
+                <span class="sosIconCircle">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 21c4 0 6.5-2.6 6.5-6 0-3-2-4.7-2.9-7.2-.4 1.5-1.3 2.6-2.3 2.6.6-3-.6-5.8-3-7.4.4 2.2-.4 3.9-1.9 5.4C6.9 9.9 5.5 12 5.5 15c0 3.4 2.5 6 6.5 6Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span class="sosGridText">
+                  <span class="sosGridLabel">Fire</span>
+                  <span class="sosGridNumber">101</span>
+                </span>
+              </a>
+            </div>
+
+            <button
+              id="shareLocationBtn"
+              type="button"
+              class="sosShareBtn"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="4.2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+              Share my live location
+            </button>
+            <p id="shareLocationStatus" class="sosShareStatus"></p>
+            <a
+              id="shareLocationLink"
+              class="sosShareLink hidden"
+              href="#"
+              target="_blank"
+              rel="noopener"
+            ></a>
+
+            <div id="trustedContactBlock" class="trustedContactBlock">
+              <!-- Shown once a number is saved -->
+              <a id="trustedContactLink" href="#" class="hidden">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="12"
+                    cy="8"
+                    r="3.3"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  />
+                  <path
+                    d="M5 20c1.2-3.6 4-5.5 7-5.5s5.8 1.9 7 5.5"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <span id="trustedContactText">Trusted contact</span>
+              </a>
+              <button
+                id="trustedContactEditBtn"
+                class="trustedContactEditBtn hidden"
+                type="button"
+                aria-label="Edit trusted contact"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+
+              <!-- Shown when nothing is saved yet, or while editing -->
+              <div id="trustedContactForm" class="trustedContactForm">
+                <input
+                  id="trustedContactInput"
+                  type="tel"
+                  placeholder="Add a trusted contact's number"
+                />
+                <button id="trustedContactSaveBtn" type="button">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form">
+        <label for="origin">Source</label>
+        <div class="inputWrap">
+          <svg
+            class="inputIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="3.2"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <input id="origin" type="text" placeholder="Enter source location" />
+        </div>
+
+        <label for="destination">Destination</label>
+        <div class="inputWrap">
+          <svg
+            class="inputIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 21V4.5M5 4.5h11.5L14 8l2.5 3.5H5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <input id="destination" type="text" placeholder="Enter destination" />
+        </div>
+
+        <label for="time">Travel time</label>
+
+        <div class="inputWrap timePickerWrap">
+          <svg
+            class="inputIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="8.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M12 7.5V12l3 2"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+
+          <!-- This keeps the same id used by your existing JavaScript -->
+          <input id="time" type="text" value="hh:mm" readonly />
+
+          <button
+            type="button"
+            id="openClock"
+            class="clockButton"
+            aria-label="Select travel time"
+          >
+            ◷
+          </button>
+        </div>
+
+        <!-- Custom circular clock -->
+        <div id="clockOverlay" class="clockOverlay hidden"></div>
+        <div id="clockPicker" class="clockPicker hidden">
+          <div class="clockHeader">
+            <div class="clockTimeDisplay">
+              <span id="selectedHour">22</span>
+              <span>:</span>
+              <span id="selectedMinute">00</span>
+            </div>
+            <div
+              class="ampmToggle"
+              role="group"
+              aria-label="Choose AM or PM"
+            >
+              <button type="button" class="ampmBtn" data-period="AM">
+                AM
+              </button>
+              <button type="button" class="ampmBtn active" data-period="PM">
+                PM
+              </button>
+            </div>
+          </div>
+          <p class="clockHint">Tap an hour, then a minute</p>
+
+          <div class="clockFace" id="clockFace">
+            <!-- numbers are created by JavaScript -->
+          </div>
+
+          <div class="clockActions">
+            <button type="button" id="clockCancel">Cancel</button>
+            <button type="button" id="clockDone">Done</button>
+          </div>
+        </div>
+
+        <button id="locationBtn" class="btn btnSecondary">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+            <circle
+              cx="12"
+              cy="12"
+              r="4.2"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+          </svg>
+          Use my current location
+        </button>
+
+        <!-- ===== User-reported live context ===== -->
+        <div class="contextToggleRow">
+          <label class="switchLabel">
+            <input type="checkbox" id="reportConditions" />
+            <span class="switchTrack" aria-hidden="true"
+              ><span class="switchThumb"></span
+            ></span>
+            Report what you're seeing right now
+          </label>
+          <p class="hint">
+            Optional. Sliders below default to backend estimates. Turn this on
+            to override them with your own observations — applied to every
+            stretch of every route checked, and factored into the score.
+          </p>
+        </div>
+
+        <div id="contextInputs" class="contextInputs hidden">
+          <div class="sliderRow">
+            <label for="lightingInput"
+              >Street lighting <span id="lightingVal">50%</span></label
+            >
+            <input
+              type="range"
+              id="lightingInput"
+              min="0"
+              max="100"
+              value="50"
+            />
+          </div>
+          <div class="sliderRow">
+            <label for="crowdInput"
+              >Crowd density <span id="crowdVal">50%</span></label
+            >
+            <input type="range" id="crowdInput" min="0" max="100" value="50" />
+          </div>
+          <div class="sliderRow">
+            <label for="cctvInput"
+              >CCTV coverage (your estimate)
+              <span id="cctvVal">50%</span></label
+            >
+            <input type="range" id="cctvInput" min="0" max="100" value="50" />
+          </div>
+          <div class="sliderRow">
+            <label for="streetlightInput"
+              >Streetlight density <span id="streetlightVal">50%</span></label
+            >
+            <input
+              type="range"
+              id="streetlightInput"
+              min="0"
+              max="100"
+              value="50"
+            />
+          </div>
+          <div class="sliderRow">
+            <label for="footpathInput"
+              >Footpath quality <span id="footpathVal">50%</span></label
+            >
+            <input
+              type="range"
+              id="footpathInput"
+              min="0"
+              max="100"
+              value="50"
+            />
+          </div>
+        </div>
+
+        <button id="predictBtn" class="btn btnPrimary">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <circle
+              cx="11"
+              cy="11"
+              r="6.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="m20 20-4.3-4.3"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          Find safest route
+        </button>
+      </div>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p id="loadingText">Analyzing route…</p>
+      </div>
+
+      <!-- ===== Route comparison (multiple alternatives) ===== -->
+      <div id="routeCompare" class="hidden">
+        <h3 class="sectionTitle">Route options</h3>
+        <div id="routeTabs" class="routeTabs"></div>
+      </div>
+
+      <div id="resultCard" class="hidden">
+        <h2 id="routeStatus">SAFE</h2>
+
+        <div class="card">
+          <h3>Safety score</h3>
+          <div class="scoreMeter">
+            <div class="scoreMeterTrack">
+              <div id="scoreMeterFill" class="scoreMeterFill"></div>
+            </div>
+            <h1 id="overallScore">0%</h1>
+          </div>
+          <p id="riskScore" class="riskScore">Risk: 0%</p>
+          <p id="confidenceNote" class="confidenceNote"></p>
+        </div>
+
+        <div class="grid">
+          <div class="smallCard">
+            <span>Crime history</span>
+            <h3 id="crimeScore">—</h3>
+          </div>
+          <div class="smallCard">
+            <span>Lighting</span>
+            <h3 id="lightingScore">—</h3>
+          </div>
+          <div class="smallCard">
+            <span>Crowd</span>
+            <h3 id="crowdScore">—</h3>
+          </div>
+        </div>
+
+        <!-- ===== Live external data status ===== -->
+        <div class="liveDataBox">
+          <h3>Live data used in this score</h3>
+          <ul id="liveDataList"></ul>
+        </div>
+
+        <!-- ===== Full model explanation ===== -->
+        <div class="reasonBox">
+          <h3>Why — top model drivers</h3>
+          <ul id="contributionList"></ul>
+        </div>
+
+        <div class="reasonBox">
+          <h3>Reasons</h3>
+          <div id="reasonGroups"></div>
+        </div>
+
+        <!-- ===== Per-segment breakdown ===== -->
+        <div class="reasonBox">
+          <h3>Segment-by-segment</h3>
+          <div id="segmentList" class="segmentList"></div>
+        </div>
+
+        <!-- ===== Crowdsourced audits ===== -->
+        <div class="reasonBox communityBox">
+          <div class="communityBoxHeader">
+            <span class="communityIconCircle" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M12 7v5l3.2 1.9"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <div>
+              <h3>Community reports nearby</h3>
+              <p class="communityBoxSub">
+                From people who've walked this stretch recently
+              </p>
+            </div>
+          </div>
+          <div id="nearbyAuditsSummary" class="nearbyAuditsSummary">—</div>
+        </div>
+
+        <!-- ===== Feedback submission (collapsible) ===== -->
+        <div class="feedbackBox">
+          <button
+            id="feedbackToggle"
+            class="feedbackToggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span class="feedbackToggleLabel">
+              <span class="feedbackIconCircle" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 4h16v12H8l-4 4V4Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span class="feedbackToggleText">
+                <span class="feedbackToggleTitle"
+                  >Rate current safety here</span
+                >
+                <span class="feedbackToggleHint"
+                  >Help others walking this route</span
+                >
+              </span>
+            </span>
+            <svg
+              class="chev"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="m6 9 6 6 6-6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <div id="feedbackFormWrap" class="feedbackFormWrap hidden">
+            <label class="feedbackFieldLabel">How safe does this feel?</label>
+            <div class="stars" id="starRating">
+              <span data-val="1">&#9733;</span><span data-val="2">&#9733;</span
+              ><span data-val="3">&#9733;</span><span data-val="4">&#9733;</span
+              ><span data-val="5">&#9733;</span>
+            </div>
+            <label class="feedbackFieldLabel" for="feedbackComment"
+              >Anything specific? (optional)</label
+            >
+            <textarea
+              id="feedbackComment"
+              placeholder="e.g. broken streetlight near the junction, felt crowded and safe, construction blocking the footpath…"
+              maxlength="500"
+            ></textarea>
+            <button id="submitFeedbackBtn" class="btn btnPrimary">
+              Submit report
+            </button>
+            <p id="feedbackStatus" class="feedbackStatus"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Local secrets (optional, gitignored). Sets window.SAFEROUTE_ORS_KEY
+         before config.js runs. Missing this file just 404s harmlessly —
+         copy config.local.example.js to create it, or use ?ors_key=... -->
+    <script src="config.local.js"></script>
+    <!-- Config (safe to commit — always defines every constant the app
+         needs, even with no key configured) -->
+    <script src="config.js"></script>
+    <!-- Map -->
+    <script src="map.js"></script>
+    <!-- Backend -->
+    <script src="api.js"></script>
+    <!-- Main -->
+    <script src="app.js"></script>
+
+    <!-- Syncs the decorative score meter to #overallScore without touching app.js -->
+    <script>
+      (function () {
+        var scoreEl = document.getElementById("overallScore");
+        var fillEl = document.getElementById("scoreMeterFill");
+        if (!scoreEl || !fillEl) return;
+        function sync() {
+          var n = parseInt(
+            (scoreEl.textContent || "").replace(/[^\d]/g, ""),
+            10,
+          );
+          if (isNaN(n)) n = 0;
+          fillEl.style.width = Math.max(0, Math.min(100, n)) + "%";
+        }
+        new MutationObserver(sync).observe(scoreEl, {
+          childList: true,
+          characterData: true,
+          subtree: true,
+        });
+        sync();
+      })();
+
+      // Emergency panel: click the phone icon to open a translucent glass
+      // panel with the emergency numbers; click outside (or the icon again)
+      // to close it.
+      (function () {
+        var toggle = document.getElementById("sosToggle");
+        var panel = document.getElementById("sosPanel");
+        if (!toggle || !panel) return;
+        toggle.addEventListener("click", function () {
+          var willShow = panel.classList.contains("hidden");
+          panel.classList.toggle("hidden", !willShow);
+          toggle.setAttribute("aria-expanded", String(willShow));
+          toggle.classList.toggle("active", willShow);
+        });
+        document.addEventListener("click", function (e) {
+          if (panel.classList.contains("hidden")) return;
+          if (panel.contains(e.target) || toggle.contains(e.target)) return;
+          panel.classList.add("hidden");
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.classList.remove("active");
+        });
+      })();
+
+      // Share my live location — grabs a fresh GPS fix and hands it to
+      // the native share sheet (falls back to opening an SMS to the
+      // saved trusted contact, or copying the link) so a real person can
+      // see where you are. Purely client-side; no backend involved.
+      (function () {
+        var STORAGE_KEY = "safeherway_trusted_contact";
+        var btn = document.getElementById("shareLocationBtn");
+        var status = document.getElementById("shareLocationStatus");
+        var linkEl = document.getElementById("shareLocationLink");
+        if (!btn || !status) return;
+
+        btn.addEventListener("click", function () {
+          if (!navigator.geolocation) {
+            status.textContent = "Location isn't available on this device.";
+            return;
+          }
+          status.textContent = "Getting your current location…";
+          if (linkEl) linkEl.classList.add("hidden");
+          btn.disabled = true;
+
+          navigator.geolocation.getCurrentPosition(
+            async function (position) {
+              var lat = position.coords.latitude.toFixed(6);
+              var lon = position.coords.longitude.toFixed(6);
+              var mapsUrl = "https://maps.google.com/?q=" + lat + "," + lon;
+              var message = "I'm sharing my live location: " + mapsUrl;
+
+              btn.disabled = false;
+
+              // Always show the link itself, no matter which share path
+              // below succeeds — that way there's always a visible,
+              // copyable confirmation on screen, even in a preview or a
+              // browser without GPS-to-share-sheet wiring.
+              if (linkEl) {
+                linkEl.textContent = mapsUrl;
+                linkEl.href = mapsUrl;
+                linkEl.classList.remove("hidden");
+              }
+
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: "My live location",
+                    text: message,
+                  });
+                  status.textContent = "Location shared. Link below too:";
+                  return;
+                } catch (err) {
+                  // User cancelled the share sheet, or it's unsupported —
+                  // fall through to the SMS / clipboard fallback below.
+                }
+              }
+
+              var savedContact = "";
+              try {
+                savedContact = localStorage.getItem(STORAGE_KEY) || "";
+              } catch (err) {}
+
+              if (savedContact) {
+                var digits = savedContact.replace(/[^\d+]/g, "");
+                window.location.href =
+                  "sms:" + digits + "?body=" + encodeURIComponent(message);
+                status.textContent =
+                  "Opening a text to your trusted contact… link below too:";
+              } else if (navigator.clipboard) {
+                try {
+                  await navigator.clipboard.writeText(message);
+                  status.textContent =
+                    "Location link copied — paste it to whoever you want to reach:";
+                } catch (err) {
+                  status.textContent = "Here's your location link:";
+                }
+              } else {
+                status.textContent = "Here's your location link:";
+              }
+            },
+            function () {
+              btn.disabled = false;
+              status.textContent =
+                "Couldn't get your location. Check location permissions.";
+              if (linkEl) linkEl.classList.add("hidden");
+            },
+            { enableHighAccuracy: true, timeout: 10000 },
+          );
+        });
+      })();
+
+      // Feedback box collapse/expand — hidden by default, opens on click.
+      (function () {
+        var toggle = document.getElementById("feedbackToggle");
+        var wrap = document.getElementById("feedbackFormWrap");
+        if (!toggle || !wrap) return;
+        toggle.addEventListener("click", function () {
+          var willShow = wrap.classList.contains("hidden");
+          wrap.classList.toggle("hidden", !willShow);
+          toggle.setAttribute("aria-expanded", String(willShow));
+          toggle.classList.toggle("open", willShow);
+        });
+      })();
+
+      // Trusted contact: saved locally on this device (no backend for this
+      // yet), editable at any time via the pencil icon.
+      (function () {
+        var STORAGE_KEY = "safeherway_trusted_contact";
+        var link = document.getElementById("trustedContactLink");
+        var text = document.getElementById("trustedContactText");
+        var editBtn = document.getElementById("trustedContactEditBtn");
+        var form = document.getElementById("trustedContactForm");
+        var input = document.getElementById("trustedContactInput");
+        var saveBtn = document.getElementById("trustedContactSaveBtn");
+        if (!link || !form || !input || !saveBtn) return;
+
+        function render(number) {
+          if (number) {
+            text.textContent = "Trusted contact — " + number;
+            link.href = "tel:" + number.replace(/[^\d+]/g, "");
+            link.classList.remove("hidden");
+            editBtn.classList.remove("hidden");
+            form.classList.add("hidden");
+          } else {
+            link.classList.add("hidden");
+            editBtn.classList.add("hidden");
+            form.classList.remove("hidden");
+          }
+        }
+
+        function save() {
+          var value = input.value.trim();
+          if (!value) return;
+          try {
+            localStorage.setItem(STORAGE_KEY, value);
+          } catch (err) {
+            console.warn("Could not save trusted contact:", err);
+          }
+          render(value);
+        }
+
+        saveBtn.addEventListener("click", save);
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") save();
+        });
+        editBtn.addEventListener("click", function () {
+          var current = "";
+          try {
+            current = localStorage.getItem(STORAGE_KEY) || "";
+          } catch (err) {}
+          input.value = current;
+          form.classList.remove("hidden");
+          input.focus();
+        });
+
+        var saved = "";
+        try {
+          saved = localStorage.getItem(STORAGE_KEY) || "";
+        } catch (err) {}
+        render(saved);
+      })();
+    </script>
+  </body>
+</html>

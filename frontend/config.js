@@ -55,18 +55,56 @@ const NOMINATIM = {
 
 // ---------- Routing ----------
 
-// OSRM - currently used by the existing project
-// const OSRM = {
-//   ROUTE: "https://router.project-osrm.org/route/v1",
-// };
+// OpenRouteService key resolution, mirroring resolveApiBaseUrl() above:
+//   1. ?ors_key=... in the URL (saved to localStorage for next time)
+//   2. A value saved earlier via localStorage
+//   3. window.SAFEROUTE_ORS_KEY, set by an optional config.local.js
+//      (gitignored - copy config.local.example.js to create it)
+//
+// Previously the real key only ever lived in config.local.js, which was
+// the ONLY file declaring API/ORS/DEFAULT_LOCATION/EMERGENCY at all and
+// is gitignored. A fresh clone of this repo had no config.local.js, so
+// app.html's hard <script src="config.local.js"> 404'd and every one
+// of those constants was undefined — the app broke immediately, not just
+// routing. Now config.js (committed) always defines everything with a
+// safe fallback, and config.local.js's only job is to optionally supply
+// the secret key.
+function resolveOrsApiKey() {
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = params.get("ors_key");
+  if (fromQuery) {
+    localStorage.setItem("saferoute_ors_key", fromQuery);
+    return fromQuery;
+  }
+
+  const saved = localStorage.getItem("saferoute_ors_key");
+  if (saved) return saved;
+
+  if (
+    typeof window.SAFEROUTE_ORS_KEY === "string" &&
+    window.SAFEROUTE_ORS_KEY.trim()
+  ) {
+    return window.SAFEROUTE_ORS_KEY.trim();
+  }
+
+  return "";
+}
 
 // OpenRouteService - pedestrian routing
 const ORS = {
-  API_KEY: " ",
+  API_KEY: resolveOrsApiKey(),
 
   ROUTE_URL:
     "https://api.openrouteservice.org/v2/directions/foot-walking/geojson",
 };
+
+if (!ORS.API_KEY) {
+  console.warn(
+    "[SafeRoute] No OpenRouteService API key configured — routing will fail. " +
+      "Copy frontend/config.local.example.js to frontend/config.local.js and add your key, " +
+      "or open this page with ?ors_key=YOUR_KEY appended to the URL.",
+  );
+}
 
 // ---------- Route sampling / comparison ----------
 
