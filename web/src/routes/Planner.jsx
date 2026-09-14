@@ -15,8 +15,10 @@ import RouteDetail from "../components/RouteDetail.jsx";
 import RouteMap from "../components/RouteMap.jsx";
 import SafetyKit from "../components/SafetyKit.jsx";
 import TimeChoice, { resolveDeparture } from "../components/TimeChoice.jsx";
+import WalkingHUD from "../components/WalkingHUD.jsx";
 import { useHealth } from "../hooks/useHealth.js";
 import { useRouteSearch } from "../hooks/useRouteSearch.js";
+import { useWalkingMode } from "../hooks/useWalkingMode.js";
 import { USABLE_ACCURACY_M, describeAccuracy, getAccurateLocation, watchLocation } from "../lib/geolocation.js";
 import { geocode } from "../lib/places.js";
 import { hasRoutingKey } from "../lib/routing.js";
@@ -157,6 +159,40 @@ export default function Planner() {
           )
         : null,
     [routes],
+  );
+
+  // The route actually being walked. Starts as a copy of whatever was
+  // selected in the planner, then tracks reroutes independently of it --
+  // so switching mid-walk doesn't depend on the original search results
+  // still being in scope.
+  const [walkEntry, setWalkEntry] = useState(null);
+  const walking = useWalkingMode({ entry: walkEntry, to, mode });
+
+  const startWalking = useCallback(() => {
+    if (!selected) return;
+    setWalkEntry(selected);
+    walking.start();
+  }, [selected, walking]);
+
+  const endWalking = useCallback(() => {
+    walking.stop();
+    setWalkEntry(null);
+  }, [walking]);
+
+  const handleAcceptReroute = useCallback(() => {
+    const accepted = walking.acceptReroute();
+    if (accepted) setWalkEntry(accepted);
+  }, [walking]);
+
+  const displayEntry = walking.active ? walkEntry : selected;
+  const offRoute = walking.active && walking.onRouteState && walking.onRouteState.offRouteM > 35;
+
+  // Stable references while walking: a fresh array/array-of-coordinates
+  // every render would re-trigger the map's fit-bounds effect on every GPS
+  // fix and fight anyone trying to watch the live dot move.
+  const mapRoutes = useMemo(
+    () => (walking.active ? (walkEntry ? [walkEntry] : []) : routes),
+    [walking.active, walkEntry, routes],
   );
 
   const useMyLocation = useCallback(async (apply) => {
@@ -304,7 +340,9 @@ export default function Planner() {
             </Alert>
           )}
 
-          {home && (
+          {walking.active && <WalkingHUD walking={walking} onEnd={endWalking} onAcceptReroute={handleAcceptReroute} />}
+
+          {!walking.active && home && (
             <button
               type="button"
               className="homeCta"
@@ -316,7 +354,7 @@ export default function Planner() {
             </button>
           )}
 
-          <form className="planner__form" onSubmit={runSearch}>
+          {!walking.active && <form className="planner__form" onSubmit={runSearch}>
             <PlaceField
               id="from"
               label="Starting from"
@@ -363,9 +401,9 @@ export default function Planner() {
             >
               {busy ? "Checking routes…" : "Find the safest way"}
             </button>
-          </form>
+          </form>}
 
-          {busy && (
+          {!walking.active && busy && (
             <div className="skeleton" role="status" aria-live="polite">
               <p className="planner__progress">
                 <span className="spinner" aria-hidden="true" />
@@ -395,7 +433,7 @@ export default function Planner() {
           {error && <Alert title="Couldn't plan that route">{error.message}</Alert>}
 
           <div ref={resultsRef}>
-            {routes.length > 0 && selected && (
+            {routes.length > 0 && selected && !walking.active && (
               <>
                 <TonightStrip entry={selected} departure={resolveDeparture(time)} />
                 <RouteChoices
@@ -403,6 +441,14 @@ export default function Planner() {
                   selectedId={selected?.routeId}
                   onSelect={setSelectedId}
                 />
+
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={startWalking}
+                >
+                  Start walking this route
+                </button>
 
                 {/* Keep this walk: it then shows up on My routes with its
                     current score and any new reports along it. */}
@@ -445,10 +491,9 @@ export default function Planner() {
                     </button>
                   )}
                 </div>
-
-                {selected && <RouteDetail entry={selected} fastest={fastest} />}
               </>
             )}
+            {displayEntry && <RouteDetail entry={displayEntry} fastest={walking.active ? null : fastest} />}
           </div>
         </div>
 
@@ -457,14 +502,17 @@ export default function Planner() {
 
       <div className="planner__map">
         <RouteMap
-          routes={routes}
-          selectedId={selected?.routeId}
+          routes={mapRoutes}
+          selectedId={walking.active ? walkEntry?.routeId : selected?.routeId}
           onSelect={setSelectedId}
           from={from}
           to={to}
-          live={live}
+          live={walking.active ? walking.position || live : live}
           focusFix={focusFix}
-          layoutKey={`${routes.length}-${selected?.routeId ?? ""}`}
+          layoutKey={`${routes.length}-${selected?.routeId ?? ""}-${walking.active}`}
+          walkedPath={walking.active ? walking.walkedPath : undefined}
+          rerouteCoordinates={walking.reroute?.route.coordinates}
+          offRoute={offRoute}
         />
         <SafetyKit />
       </div>

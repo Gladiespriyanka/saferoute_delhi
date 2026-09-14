@@ -51,6 +51,58 @@
   gap: var(--s-5);
 }
 
+/* ---- Walking mode ---- */
+
+.walkingHud {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.walkingHud__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.walkingHud__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.walkingHud__progressLabel {
+  font-size: var(--t-xs);
+  color: var(--muted);
+}
+
+.walkingHud__checking {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.walkingHud__reroute {
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--safe);
+  border-radius: var(--r-md);
+  background: var(--safe-tint);
+}
+
+.walkingHud__reroute p {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-sm);
+}
+
+.walkingHud__rerouteActions {
+  display: flex;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
 /* ---- Take me home ---- */
 
 .homeCta {
