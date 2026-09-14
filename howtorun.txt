@@ -1,0 +1,9 @@
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+cd web
+npm install
+Copy-Item .env.example .env.local
+npm run dev

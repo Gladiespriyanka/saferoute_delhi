@@ -16,6 +16,10 @@ covers — and you deserve to know when that is the case.
 
 ---
 
+Deployed demo: https://safe-her-way-ebon.vercel.app/
+
+---
+
 ## Quick start
 
 ```bash
