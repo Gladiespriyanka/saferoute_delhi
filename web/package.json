@@ -1,0 +1,23 @@
+{
+  "name": "safeherway-web",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "SafeHerWay \u2014 walking-route safety for Delhi",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/postbuild.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.9.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "vite": "^7.1.9"
+  }
+}

@@ -1,0 +1,11 @@
+# Normalize line endings in the repo to LF for every text file.
+#
+# Without this, editing on Windows (or any editor defaulting to CRLF)
+# rewrites every line of every file, so `git diff` shows the whole project
+# as changed and real edits become impossible to review. `* text=auto`
+# stores LF in git and lets each checkout use its platform's convention.
+* text=auto eol=lf
+
+*.png binary
+*.joblib binary
+*.csv text eol=lf

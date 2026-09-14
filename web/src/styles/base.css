@@ -1,0 +1,183 @@
+/* Reset, base type, and the handful of primitives shared everywhere. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  font-synthesis-weight: none;
+}
+
+body {
+  transition: background 0.3s var(--ease), color 0.3s var(--ease);
+  font-family: var(--sans);
+  font-size: var(--t-base);
+  line-height: 1.6;
+  color: var(--body);
+  background: var(--plum);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+::selection {
+  background: var(--saffron-tint);
+  color: var(--ink);
+}
+
+/* Figures line up in columns and stop jittering as they animate. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* One eyebrow treatment, not six slightly different ones. */
+.eyebrow {
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.onDark :where(a, button, input):focus-visible {
+  outline-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ---- Risk chips, shared by every surface that names a state ---- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.1875rem var(--s-3);
+  border-radius: var(--r-pill);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.chip::before {
+  content: "";
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.chip--bare::before {
+  display: none;
+}
+
+.tone-safe {
+  background: var(--safe-tint);
+  color: var(--safe-deep);
+}
+.tone-moderate {
+  background: var(--moderate-tint);
+  color: var(--moderate-deep);
+}
+.tone-unsafe {
+  background: var(--unsafe-tint);
+  color: var(--unsafe-deep);
+}
+.tone-neutral {
+  background: var(--paper-2);
+  color: var(--muted);
+}
+
+.bar {
+  height: 0.25rem;
+  border-radius: var(--r-pill);
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.bar__fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  transition: width 0.5s var(--ease);
+}
+
+.bar__fill.tone-safe {
+  background: var(--safe);
+}
+.bar__fill.tone-moderate {
+  background: var(--moderate);
+}
+.bar__fill.tone-unsafe {
+  background: var(--unsafe);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "generated_at": "2026-09-13T17:57:32+00:00",
+  "model_version": "0.2.0",
+  "calibration_method": "isotonic",
+  "n_features": 16,
+  "feature_columns": [
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "lighting_score",
+    "crowd_density",
+    "cctv_coverage",
+    "streetlight_density",
+    "footpath_quality",
+    "infra_score",
+    "isolation_index",
+    "time_of_day_risk",
+    "dist_metro_km",
+    "dist_bus_km",
+    "dist_hospital_km",
+    "dist_police_km"
+  ],
+  "split_sizes": {
+    "fit": 13781,
+    "calibrate": 3711,
+    "select": 3759,
+    "test": 3749
+  },
+  "split_cells": {
+    "fit": 325,
+    "calibrate": 89,
+    "select": 89,
+    "test": 89
+  },
+  "test": {
+    "accuracy": 0.7778074153107495,
+    "macro_f1": 0.7799795020157617,
+    "log_loss": 0.5509687288279095,
+    "brier": 0.3109908247345816,
+    "ece": 0.02360692178920368,
+    "mce": 0.04615113000645421,
+    "mean_confidence": 0.7880486442815121,
+    "calibration_bins": [
+      {
+        "range": [
+          0.467,
+          0.533
+        ],
+        "count": 329,
+        "mean_confidence": 0.52,
+        "accuracy": 0.5532
+      },
+      {
+        "range": [
+          0.533,
+          0.6
+        ],
+        "count": 271,
+        "mean_confidence": 0.5628,
+        "accuracy": 0.5166
+      },
+      {
+        "range": [
+          0.6,
+          0.667
+        ],
+        "count": 316,
+        "mean_confidence": 0.6293,
+        "accuracy": 0.6297
+      },
+      {
+        "range": [
+          0.667,
+          0.733
+        ],
+        "count": 416,
+        "mean_confidence": 0.6916,
+        "accuracy": 0.7163
+      },
+      {
+        "range": [
+          0.733,
+          0.8
+        ],
+        "count": 455,
+        "mean_confidence": 0.7764,
+        "accuracy": 0.7846
+      },
+      {
+        "range": [
+          0.8,
+          0.867
+        ],
+        "count": 577,
+        "mean_confidence": 0.836,
+        "accuracy": 0.8042
+      },
+      {
+        "range": [
+          0.867,
+          0.933
+        ],
+        "count": 523,
+        "mean_confidence": 0.8885,
+        "accuracy": 0.8566
+      },
+      {
+        "range": [
+          0.933,
+          1.0
+        ],
+        "count": 862,
+        "mean_confidence": 0.979,
+        "accuracy": 0.9606
+      }
+    ],
+    "reference": {
+      "accuracy": 0.804947927048847,
+      "log_loss": 0.48286203262592065,
+      "brier": 0.29283906206147486
+    }
+  },
+  "bayes_optimal_accuracy": 0.804947927048847,
+  "accuracy_vs_ceiling": 0.9663,
+  "calibration_comparison_on_select_split": {
+    "isotonic": {
+      "accuracy": 0.78532,
+      "macro_f1": 0.78816,
+      "log_loss": 0.50203,
+      "brier": 0.30731,
+      "ece": 0.02678,
+      "mce": 0.05627,
+      "mean_confidence": 0.78121
+    },
+    "sigmoid": {
+      "accuracy": 0.7792,
+      "macro_f1": 0.78223,
+      "log_loss": 0.51641,
+      "brier": 0.3098,
+      "ece": 0.03348,
+      "mce": 0.05691,
+      "mean_confidence": 0.79194
+    },
+    "uncalibrated": {
+      "accuracy": 0.77334,
+      "macro_f1": 0.77615,
+      "log_loss": 0.49995,
+      "brier": 0.31081,
+      "ece": 0.02205,
+      "mce": 0.12668,
+      "mean_confidence": 0.75757
+    }
+  },
+  "per_class": {
+    "Safe": {
+      "precision": 0.8244274809160306,
+      "recall": 0.726457399103139,
+      "f1-score": 0.7723480333730631,
+      "support": 892.0
+    },
+    "Moderate": {
+      "precision": 0.7104952830188679,
+      "recall": 0.7819597663854639,
+      "f1-score": 0.7445165276490577,
+      "support": 1541.0
+    },
+    "Unsafe": {
+      "precision": 0.8389897395422258,
+      "recall": 0.8077507598784195,
+      "f1-score": 0.8230739450251645,
+      "support": 1316.0
+    },
+    "accuracy": 0.7778074153107495,
+    "macro avg": {
+      "precision": 0.7913041678257081,
+      "recall": 0.7720559751223407,
+      "f1-score": 0.7799795020157617,
+      "support": 3749.0
+    },
+    "weighted avg": {
+      "precision": 0.7827081998790995,
+      "recall": 0.7778074153107495,
+      "f1-score": 0.7787142508746564,
+      "support": 3749.0
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "Safe",
+      "Moderate",
+      "Unsafe"
+    ],
+    "counts": [
+      [
+        648,
+        242,
+        2
+      ],
+      [
+        134,
+        1205,
+        202
+      ],
+      [
+        4,
+        249,
+        1063
+      ]
+    ]
+  },
+  "permutation_importance": [
+    {
+      "feature": "isolation_index",
+      "importance": 0.2234
+    },
+    {
+      "feature": "time_of_day_risk",
+      "importance": 0.18593
+    },
+    {
+      "feature": "infra_score",
+      "importance": 0.18371
+    },
+    {
+      "feature": "hour_cos",
+      "importance": 0.10159
+    },
+    {
+      "feature": "footpath_quality",
+      "importance": 0.05502
+    },
+    {
+      "feature": "crowd_density",
+      "importance": 0.01816
+    },
+    {
+      "feature": "dow_sin",
+      "importance": 0.01353
+    },
+    {
+      "feature": "dist_police_km",
+      "importance": 0.00411
+    },
+    {
+      "feature": "lighting_score",
+      "importance": 0.00249
+    },
+    {
+      "feature": "dist_bus_km",
+      "importance": 0.0018
+    },
+    {
+      "feature": "dist_hospital_km",
+      "importance": 0.00115
+    },
+    {
+      "feature": "dow_cos",
+      "importance": 0.00062
+    },
+    {
+      "feature": "streetlight_density",
+      "importance": 0.00041
+    },
+    {
+      "feature": "dist_metro_km",
+      "importance": -4e-05
+    },
+    {
+      "feature": "cctv_coverage",
+      "importance": -0.00152
+    },
+    {
+      "feature": "hour_sin",
+      "importance": -0.00539
+    }
+  ],
+  "feature_diagnostics": [
+    {
+      "feature": "hour_sin",
+      "mean": 0.0025,
+      "std": 0.7064,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "hour_cos",
+      "mean": -0.0042,
+      "std": 0.7078,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "dow_sin",
+      "mean": 0.0027,
+      "std": 0.7062,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "dow_cos",
+      "mean": -0.0065,
+      "std": 0.7079,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "lighting_score",
+      "mean": 0.7234,
+      "std": 0.0597,
+      "observed_share": 0.1139
+    },
+    {
+      "feature": "crowd_density",
+      "mean": 0.2557,
+      "std": 0.3315,
+      "observed_share": 0.4404
+    },
+    {
+      "feature": "cctv_coverage",
+      "mean": 0.029,
+      "std": 0.1379,
+      "observed_share": 0.0498
+    },
+    {
+      "feature": "streetlight_density",
+      "mean": 0.0085,
+      "std": 0.0746,
+      "observed_share": 0.0162
+    },
+    {
+      "feature": "footpath_quality",
+      "mean": 0.2507,
+      "std": 0.3374,
+      "observed_share": 0.5504
+    },
+    {
+      "feature": "infra_score",
+      "mean": 0.4229,
+      "std": 0.2484,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "isolation_index",
+      "mean": 0.6551,
+      "std": 0.2374,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "time_of_day_risk",
+      "mean": 0.4989,
+      "std": 0.2844,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "dist_metro_km",
+      "mean": 4.0653,
+      "std": 4.7093,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "dist_bus_km",
+      "mean": 5.5128,
+      "std": 6.9934,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "dist_hospital_km",
+      "mean": 2.5979,
+      "std": 2.4044,
+      "observed_share": 1.0
+    },
+    {
+      "feature": "dist_police_km",
+      "mean": 3.4646,
+      "std": 3.1975,
+      "observed_share": 1.0
+    }
+  ],
+  "label_distribution": {
+    "Moderate": 0.4168,
+    "Unsafe": 0.3406,
+    "Safe": 0.2426
+  },
+  "provenance": {
+    "feature_source": "openstreetmap",
+    "osm_snapshot": "2026-09-13",
+    "poi_counts": {
+      "metro": 172,
+      "bus_stop": 1331,
+      "hospital": 732,
+      "police": 125
+    },
+    "grid_cells": 1600,
+    "mapped_cells": 592,
+    "crime_data": "not configured (see data/README.md)"
+  }
+}

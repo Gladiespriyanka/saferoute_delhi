@@ -1,0 +1,33 @@
+# Tooling configuration. There is no build step -- the project runs from the
+# checkout -- so this file exists purely to make lint and test behaviour the
+# same for everyone.
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "SIM", "C4", "RET", "UP"]
+ignore = [
+    # FastAPI and Typer both express dependencies and options as call
+    # expressions in argument defaults. That is the documented idiom for
+    # both, not the mutable-default hazard this rule exists to catch.
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests read better with the expected value inline, and conftest must set
+# environment variables before importing anything from `app`.
+"tests/*" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+filterwarnings = [
+    # Starlette's TestClient warns about httpx on import; not actionable here.
+    "ignore::DeprecationWarning",
+    "ignore:.*httpx.*starlette.*:UserWarning",
+]

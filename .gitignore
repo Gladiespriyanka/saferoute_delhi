@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# --- Secrets and local config ---
+.env
+.env.*
+# web/.env.local holds the real OpenRouteService key.
+!web/.env.example
+
+# --- Web app ---
+node_modules/
+web/dist/
+.vite/
+
+# --- Generated artifacts ---
+# Everything under artifacts/ is rebuilt by `python fetch_osm_data.py` and
+# `python train_model.py`: the OSM cache (tens of MB of raw Overpass JSON),
+# the derived tables, the model (~80MB), the sampled dataset, and the audit
+# log, which holds user-submitted reports and should never be committed.
+#
+# The two exceptions are kept deliberately: the model card and its metrics
+# are the documentation of what was actually trained, and are worth reading
+# in a diff without re-running the pipeline.
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/model_card.md
+!artifacts/model_metrics.json

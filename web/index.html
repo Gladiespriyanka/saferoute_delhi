@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2a1a3f" />
+    <title>SafeHerWay — the safest way home</title>
+    <meta
+      name="description"
+      content="SafeHerWay scores every walking route in Delhi on measured street lighting, surveillance, footpaths and how far you are from help — plus live weather and traffic — so you can choose the safest way home, not just the fastest."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a1a3f'/%3E%3Cpath d='M7 23c2.8-9.5 8.2-4.2 11.6-13.4L23 5' stroke='%23f7f4ef' stroke-width='2.1' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='23.4' cy='4.6' r='2.3' fill='%23e9a23b'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("safeherway.theme");
+          var dark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (dark) document.documentElement.setAttribute("data-theme", "dark");
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      SafeHerWay needs JavaScript to score routes and draw the map.
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

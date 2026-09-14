@@ -1,0 +1,628 @@
+/* ===========================================================
+   App shell, dashboard, reports
+   =========================================================== */
+
+:root {
+  --bar-h: 3.5rem;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--paper);
+}
+
+.shell__bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: var(--bar-h);
+  padding: 0 var(--gutter);
+  background: var(--bar-bg);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  color: var(--bar-fg);
+  border-bottom: 1px solid var(--bar-line);
+}
+
+.shell__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-self: start;
+  font-family: var(--serif);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: inherit;
+}
+
+.shell__mark {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.shell__nav {
+  display: flex;
+  gap: var(--s-1);
+  justify-self: center;
+}
+
+.shell__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: var(--bar-h);
+  padding: 0 var(--s-3);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--bar-fg-soft);
+  text-decoration: none;
+  transition: color 0.16s var(--ease);
+}
+
+.shell__link::after {
+  content: "";
+  position: absolute;
+  left: var(--s-3);
+  right: var(--s-3);
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--saffron);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.22s var(--ease-out);
+}
+
+.shell__link:hover {
+  color: var(--bar-fg);
+}
+
+.shell__link.active {
+  color: var(--bar-fg);
+}
+
+.shell__link.active::after {
+  transform: scaleX(1);
+}
+
+.shell__count {
+  min-width: 1.125rem;
+  padding: 0 0.375rem;
+  border-radius: var(--r-pill);
+  background: var(--saffron);
+  color: #141212;
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.125rem;
+}
+
+.shell__tools {
+  justify-self: end;
+}
+
+.shell__body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The planner fills the space beneath the bar rather than the full viewport. */
+.shell .planner {
+  height: calc(100dvh - var(--bar-h));
+}
+
+/* ---- Dashboard ---- */
+
+.dash {
+  position: relative;
+  width: min(60rem, 100% - 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--s-8) 0 var(--s-12);
+}
+
+.dash__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-5);
+  margin-bottom: var(--s-7);
+}
+
+.dash__title {
+  font-size: var(--t-3xl);
+}
+
+.dash__lede {
+  margin-top: var(--s-2);
+  font-size: var(--t-md);
+  color: var(--muted);
+}
+
+.dash__empty {
+  padding: var(--s-8) var(--s-6);
+  background: var(--surface);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-xl);
+  text-align: center;
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+.dash__empty p {
+  font-size: var(--t-md);
+  line-height: 1.65;
+  margin-bottom: var(--s-5);
+}
+
+.routeCards {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.routeCard {
+  padding: var(--s-5) var(--s-6);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.routeCard.has-new {
+  border-color: var(--saffron);
+  box-shadow: 0 0 0 1px var(--saffron), var(--shadow-sm);
+}
+
+.routeCard__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-5);
+}
+
+.routeCard__name {
+  font-size: var(--t-xl);
+}
+
+.routeCard__path {
+  margin-top: 0.125rem;
+  font-size: var(--t-sm);
+}
+
+.routeCard__score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-md);
+  min-width: 5.5rem;
+}
+
+.routeCard__scoreNum {
+  font-family: var(--serif);
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.routeCard__scoreNum::after {
+  content: "%";
+  font-size: var(--t-md);
+  margin-left: 0.0625rem;
+  opacity: 0.6;
+}
+
+.routeCard__scoreLabel {
+  margin-top: 0.125rem;
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.routeCard__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  margin: var(--s-4) 0;
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--t-sm);
+  color: var(--body);
+}
+
+.routeCard__warn {
+  color: var(--unsafe-deep);
+  font-weight: 600;
+}
+
+.routeCard__fresh {
+  padding: 0 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--saffron-tint);
+  color: var(--saffron-deep);
+  font-weight: 700;
+}
+
+.routeCard__error {
+  font-size: var(--t-sm);
+  color: var(--moderate-deep);
+}
+
+.routeCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.routeCard__remove {
+  margin-left: auto;
+  font-size: var(--t-sm);
+  color: var(--faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.routeCard__remove:hover {
+  color: var(--unsafe-deep);
+}
+
+.routeCard__report {
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* On a scrolling page the emergency button stays pinned to the viewport,
+   not to wherever the last card happens to end. */
+.dash .safetyKit {
+  position: fixed;
+  right: var(--s-6);
+  bottom: var(--s-6);
+}
+
+/* ---- Buttons: extra sizes ---- */
+
+.btn--sm {
+  height: 2.25rem;
+  padding: 0 var(--s-4);
+  font-size: var(--t-sm);
+}
+
+.btn--ghost {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn--ghost:hover {
+  border-color: var(--line-strong);
+  background: var(--sunk);
+}
+
+/* ---- Save this route ---- */
+
+.saveRoute {
+  margin-top: var(--s-3);
+}
+
+.saveRoute__form {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.saveRoute__form input {
+  flex: 1;
+  min-width: 12rem;
+  height: 2.25rem;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: var(--t-sm);
+  outline: none;
+}
+
+.saveRoute__form input:focus {
+  border-color: var(--plum-3);
+  box-shadow: 0 0 0 3px rgba(42, 61, 102, 0.14);
+}
+
+.saveRoute__done {
+  font-size: var(--t-sm);
+  color: var(--body);
+}
+
+.saveRoute__done a {
+  color: var(--plum-3);
+  font-weight: 600;
+}
+
+/* ---- Report composer ---- */
+
+.report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.report__verdicts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+
+.report__verdict {
+  height: 2.75rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--body);
+  transition: all 0.16s var(--ease);
+}
+
+.report__verdict--good[aria-pressed="true"] {
+  background: var(--safe);
+  border-color: var(--safe);
+  color: #fff;
+}
+
+.report__verdict--bad[aria-pressed="true"] {
+  background: var(--unsafe);
+  border-color: var(--unsafe);
+  color: #fff;
+}
+
+.report__label {
+  margin-top: var(--s-1);
+}
+
+.report__reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.report__reason {
+  padding: 0.375rem var(--s-3);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: var(--t-sm);
+  color: var(--body);
+  transition: all 0.16s var(--ease);
+}
+
+.report__reason[aria-pressed="true"] {
+  background: var(--accent-bg);
+  border-color: var(--accent-bg);
+  color: var(--accent-fg);
+}
+
+.report__comment {
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+}
+
+.report__comment:focus {
+  border-color: var(--plum-3);
+  box-shadow: 0 0 0 3px rgba(42, 61, 102, 0.14);
+}
+
+.report .btn--primary {
+  align-self: flex-start;
+}
+
+.report__status {
+  font-size: var(--t-sm);
+}
+.report__status.is-error {
+  color: var(--unsafe-deep);
+}
+.report__status.is-ok {
+  color: var(--safe-deep);
+}
+
+/* ---- Report list ---- */
+
+.reports {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.reportItem {
+  padding: var(--s-3);
+  background: var(--sunk);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+}
+
+.reportItem.is-new {
+  border-color: var(--saffron);
+  background: var(--saffron-tint);
+}
+
+.reportItem__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-sm);
+}
+
+.reportItem__new {
+  margin-left: auto;
+  padding: 0 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--saffron);
+  color: #fff;
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.25rem;
+}
+
+.reportItem__reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: var(--s-2);
+}
+
+.reportItem__reason {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  font-size: var(--t-xs);
+  color: var(--body);
+}
+
+.reportItem__comment {
+  margin-top: var(--s-2);
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  color: var(--body);
+}
+
+@media (max-width: 40rem) {
+  .dash__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .routeCard {
+    padding: var(--s-4);
+  }
+  .routeCard__head {
+    flex-direction: column;
+  }
+  .routeCard__score {
+    align-items: flex-start;
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--s-2);
+  }
+}
+
+/* ---- Dashboard v2: stats strip, two columns, feed ---- */
+
+.dash__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+  margin-bottom: var(--s-6);
+}
+
+.dash__stats > div {
+  padding: var(--s-4) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+}
+
+.dash__stats dd {
+  margin-top: var(--s-1);
+  font-family: var(--serif);
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.dash__stats dd span {
+  font-size: var(--t-md);
+  font-family: var(--sans);
+  font-weight: 600;
+  padding: 0.125rem 0.625rem;
+  border-radius: var(--r-pill);
+}
+
+.dash__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.dash__feed {
+  position: sticky;
+  top: calc(var(--bar-h) + var(--s-5));
+  padding: var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+}
+
+.dash__feedTitle {
+  font-size: var(--t-lg);
+}
+
+.dash__feedSub {
+  font-size: var(--t-sm);
+  margin: 0.125rem 0 var(--s-4);
+}
+
+.routeCard__mode {
+  margin-left: var(--s-2);
+  padding: 0 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--paper-2);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.reportItem__route {
+  margin-top: 0.125rem;
+  font-size: var(--t-xs);
+  color: var(--faint);
+}
+
+/* SOS in the app bar */
+
+.safetyKit--bar {
+  position: relative;
+  margin-left: var(--s-3);
+}
+
+.safetyKit--bar .safetyKit__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+}
+
+@media (max-width: 60rem) {
+  .dash__grid {
+    grid-template-columns: 1fr;
+  }
+  .dash__feed {
+    position: static;
+  }
+  .dash__stats {
+    grid-template-columns: 1fr;
+  }
+}

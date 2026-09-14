@@ -1,0 +1,176 @@
+/* ===========================================================
+   SafeHerWay — design tokens
+
+   Palette: deep plum for the ground, ivory paper for reading, saffron as
+   the single warm accent, jade / amber / crimson for the three risk
+   states. Two full themes; the dark one is the default after sunset
+   because that is when the app is actually used.
+
+   Every size, space and colour in the app comes from this file.
+   =========================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Ink ---- */
+  --ink: #141418;
+  --body: #45464d;
+  --muted: #7a7b85;
+  --faint: #a4a5ae;
+
+  /* ---- Ground ---- */
+  --paper: #f5f6f8;
+  --paper-2: #eceef2;
+  --surface: #ffffff;
+  --sunk: #f8f9fb;
+  --hairline: #e7e9ee;
+  --line: #d9dce3;
+  --line-strong: #c3c7d0;
+
+  /* ---- Brand ---- */
+  --plum: #141418;
+  --plum-2: #26262d;
+  --plum-3: #4a4a57;
+  --plum-tint: #eeeff4;
+  --plum-tint-2: #e2e4ec;
+  --saffron: #e9a23b;
+  --saffron-deep: #c5811e;
+  --saffron-tint: #fbf1de;
+
+  /* ---- Risk ---- */
+  --safe: #1f8f72;
+  --safe-deep: #146c56;
+  --safe-tint: #e5f4ef;
+  --moderate: #cf8a2a;
+  --moderate-deep: #9f6716;
+  --moderate-tint: #fbf0dd;
+  --unsafe: #d33f3f;
+  --unsafe-deep: #a32e2e;
+  --unsafe-tint: #fbe8e8;
+
+  /* ---- On dark surfaces (hero, dark sections) ---- */
+  --on-dark: #ffffff;
+  --on-dark-soft: rgba(255, 255, 255, 0.7);
+  --on-dark-faint: rgba(255, 255, 255, 0.42);
+  --on-dark-line: rgba(255, 255, 255, 0.14);
+  --on-dark-fill: rgba(255, 255, 255, 0.08);
+  --dark-ground: #141418;
+  --dark-ground-2: #0e0e11;
+
+  /* ---- App bar ---- */
+  --bar-bg: rgba(255, 255, 255, 0.86);
+  --bar-fg: #141418;
+  --bar-fg-soft: #6c6d77;
+  --bar-line: #e7e9ee;
+  --bar-fill: #eeeff4;
+
+  /* Primary actions and pressed states */
+  --accent-bg: #141418;
+  --accent-bg-hover: #26262d;
+  --accent-fg: #ffffff;
+
+  /* ---- Map ---- */
+  --map-tiles: "light";
+
+  /* ---- Type ---- */
+  --serif: "DM Serif Display", "Source Serif 4", Georgia, serif;
+  --sans: "Plus Jakarta Sans", "Source Sans 3", system-ui, -apple-system, sans-serif;
+
+  --t-2xs: 0.6875rem;
+  --t-xs: 0.75rem;
+  --t-sm: 0.8125rem;
+  --t-base: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.125rem;
+  --t-xl: 1.375rem;
+  --t-2xl: 1.75rem;
+  --t-3xl: 2.25rem;
+  --t-4xl: 3rem;
+  --t-5xl: 4rem;
+
+  /* ---- Space (4px grid) ---- */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.25rem;
+  --s-6: 1.5rem;
+  --s-7: 2rem;
+  --s-8: 2.5rem;
+  --s-9: 3rem;
+  --s-10: 4rem;
+  --s-12: 6rem;
+
+  --gutter: 1.5rem;
+
+  /* ---- Shape ---- */
+  --r-sm: 0.375rem;
+  --r-md: 0.625rem;
+  --r-lg: 0.875rem;
+  --r-xl: 1.25rem;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(27, 20, 38, 0.06);
+  --shadow-md: 0 18px 44px -14px rgba(27, 20, 38, 0.28), 0 2px 8px rgba(27, 20, 38, 0.06);
+  --shadow-dark: 0 20px 48px -16px rgba(0, 0, 0, 0.6);
+  --focus-ring: rgba(76, 53, 114, 0.35);
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --panel-width: 27.5rem;
+  --bar-h: 3.5rem;
+}
+
+/* ---- Dark theme ---- */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ink: #f2f0f4;
+  --body: #b9b5c0;
+  --muted: #7f7b88;
+  --faint: #56525e;
+
+  --paper: #0a0a0b;
+  --paper-2: #111113;
+  --surface: #151517;
+  --sunk: #0f0f11;
+  --hairline: #232226;
+  --line: #2e2d33;
+  --line-strong: #403e46;
+
+  --plum: #000000;
+  --plum-2: #1a191d;
+  --plum-3: #b8a6d6;
+  --plum-tint: #1c1b20;
+  --plum-tint-2: #26242c;
+  --saffron: #f2b04f;
+  --saffron-deep: #e9a23b;
+  --saffron-tint: #2a2012;
+
+  --safe: #3cc294;
+  --safe-deep: #7fe0bf;
+  --safe-tint: #10261e;
+  --moderate: #e6a94a;
+  --moderate-deep: #f3c67f;
+  --moderate-tint: #2a2012;
+  --unsafe: #ea5d5d;
+  --unsafe-deep: #f59a9a;
+  --unsafe-tint: #2c1516;
+
+  --dark-ground: #000000;
+  --dark-ground-2: #0c0c0e;
+  --map-tiles: "dark";
+  --bar-bg: rgba(0, 0, 0, 0.86);
+  --bar-fg: #f2f0f4;
+  --bar-fg-soft: rgba(242, 240, 244, 0.62);
+  --bar-line: rgba(255, 255, 255, 0.1);
+  --bar-fill: rgba(255, 255, 255, 0.08);
+  --accent-bg: #f2b04f;
+  --accent-bg-hover: #f7c072;
+  --accent-fg: #141212;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 18px 44px -14px rgba(0, 0, 0, 0.85), 0 2px 8px rgba(0, 0, 0, 0.5);
+  --focus-ring: rgba(242, 176, 79, 0.45);
+}

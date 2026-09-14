@@ -1,0 +1,29 @@
+# --- API ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+# --- Data + model ---
+# scikit-learn 1.6 introduced FrozenEstimator, used to calibrate the
+# already-fitted forest on a held-out split (app/model.py). Older versions
+# still work via the legacy cv="prefit" path, but 1.6+ is the tested target.
+scikit-learn>=1.6
+pandas>=2.2
+numpy>=1.26
+joblib>=1.3
+
+# --- Data ingestion ---
+httpx>=0.27
+# Assembles Delhi's district boundary relations from OpenStreetMap so grid
+# cells can be assigned to the district that actually contains them. Only
+# needed once district crime data is configured (see data/README.md).
+shapely>=2.0
+
+# --- Explainability ---
+# Optional: app/explain.py falls back to a permutation-based approximation
+# if shap is missing or errors out, so predictions never fail without it.
+shap>=0.45
+
+# --- CLI + tests ---
+typer>=0.12
+pytest>=8.0
