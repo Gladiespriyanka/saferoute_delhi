@@ -225,6 +225,71 @@ class NearbyAuditsResponse(BaseModel):
     audits: list[AuditRecord]
 
 
+# ---------------------------------------------------------------------------
+# Smart Escort Mode
+#
+# A trip_id names the session and is unguessable (uuid4 hex, 122 bits) --
+# that's what makes the share link safe to hand to someone with no account.
+# owner_token is a *second* secret, known only to the walker's own browser,
+# required for every write; anyone with just the share link can watch a
+# trip but never post to it, end it, or fake an "I'm OK".
+# ---------------------------------------------------------------------------
+
+
+class EscortDestination(BaseModel):
+    point: GeoPoint
+    label: str | None = Field(None, max_length=200)
+
+
+class EscortStartRequest(BaseModel):
+    destination: EscortDestination | None = None
+    check_in_interval_seconds: int = Field(600, ge=60, le=3600)
+    route_preview: list[GeoPoint] | None = Field(
+        None, max_length=60, description="Planned-route points, shown to the companion for context"
+    )
+
+
+class EscortStartResponse(BaseModel):
+    trip_id: str
+    owner_token: str = Field(..., description="Kept in the walker's browser only; never put this in the share link")
+    created_at: datetime
+    check_in_interval_seconds: int
+    expires_at: datetime
+
+
+class EscortPositionUpdate(BaseModel):
+    point: GeoPoint
+    risk_label: RiskLabel | None = None
+    risk_score: float | None = Field(None, ge=0, le=1)
+    progress_fraction: float | None = Field(None, ge=0, le=1)
+
+
+class EscortCheckIn(BaseModel):
+    ok: bool
+
+
+class EscortEvent(BaseModel):
+    at: datetime
+    kind: str = Field(..., description="'started' | 'position' | 'checkin_ok' | 'checkin_missed' | 'sos' | 'ended'")
+    text: str
+
+
+class EscortStatusResponse(BaseModel):
+    trip_id: str
+    status: str = Field(..., description="'active' | 'alert' | 'ended'")
+    started_at: datetime
+    last_update_at: datetime
+    check_in_interval_seconds: int
+    next_check_in_due_at: datetime | None
+    destination: EscortDestination | None
+    route_preview: list[GeoPoint] | None
+    last_point: GeoPoint | None
+    risk_label: RiskLabel | None
+    risk_score: float | None
+    progress_fraction: float | None
+    events: list[EscortEvent]
+
+
 class HealthResponse(BaseModel):
     """Liveness plus full provenance, so a client can tell what it is talking to."""
 

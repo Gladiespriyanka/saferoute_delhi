@@ -15,7 +15,7 @@ export class ApiError extends Error {
  * the browser's own TCP timeout — about a minute of spinner and no
  * explanation.
  */
-async function request(path, { method = "GET", body, signal, timeoutMs = REQUEST_TIMEOUT_MS } = {}) {
+async function request(path, { method = "GET", body, signal, timeoutMs = REQUEST_TIMEOUT_MS, headers } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(new DOMException("timeout", "TimeoutError")), timeoutMs);
   const onAbort = () => controller.abort(signal?.reason);
@@ -27,6 +27,7 @@ async function request(path, { method = "GET", body, signal, timeoutMs = REQUEST
       headers: {
         "x-api-key": API_KEY,
         ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...headers,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
@@ -132,4 +133,83 @@ export function getAuditsAlongRoute({ points, radiusKm = 0.75, limit = 50, signa
       limit,
     },
   });
+}
+
+/* ---------------------------------------------------------------------
+   Smart Escort Mode
+
+   Every write here needs both the app's own x-api-key (handled by
+   `request`) and the trip's owner_token, which the walker's browser holds
+   and a companion never sees. The one read, `getEscortStatus`, is public
+   on the backend -- it's the endpoint the share link points at -- so it's
+   safe to call with no owner_token at all.
+   --------------------------------------------------------------------- */
+
+function ownerHeaders(ownerToken) {
+  return ownerToken ? { "x-owner-token": ownerToken } : {};
+}
+
+export function startEscort({ destination, checkInIntervalSeconds = 600, routePreview, signal }) {
+  return request("/escort/start", {
+    method: "POST",
+    signal,
+    body: {
+      destination: destination ? { point: { lat: destination.lat, lon: destination.lon }, label: destination.label || destination.name || null } : null,
+      check_in_interval_seconds: checkInIntervalSeconds,
+      route_preview: routePreview ? routePreview.map(([lat, lon]) => ({ lat, lon })) : null,
+    },
+  });
+}
+
+export function updateEscortPosition({ tripId, ownerToken, lat, lon, riskLabel, riskScore, progressFraction, signal }) {
+  return request(`/escort/${tripId}/position`, {
+    method: "POST",
+    signal,
+    headers: ownerHeaders(ownerToken),
+    body: {
+      point: { lat, lon },
+      risk_label: riskLabel || null,
+      risk_score: riskScore ?? null,
+      progress_fraction: progressFraction ?? null,
+    },
+  });
+}
+
+export function checkInEscort({ tripId, ownerToken, ok, signal }) {
+  return request(`/escort/${tripId}/checkin`, {
+    method: "POST",
+    signal,
+    headers: ownerHeaders(ownerToken),
+    body: { ok },
+  });
+}
+
+export function reportMissedCheckIn({ tripId, ownerToken, signal }) {
+  return request(`/escort/${tripId}/missed-checkin`, {
+    method: "POST",
+    signal,
+    headers: ownerHeaders(ownerToken),
+  });
+}
+
+export function sosEscort({ tripId, ownerToken, lat, lon, signal }) {
+  return request(`/escort/${tripId}/sos`, {
+    method: "POST",
+    signal,
+    headers: ownerHeaders(ownerToken),
+    body: Number.isFinite(lat) && Number.isFinite(lon) ? { point: { lat, lon } } : undefined,
+  });
+}
+
+export function endEscort({ tripId, ownerToken, signal }) {
+  return request(`/escort/${tripId}/end`, {
+    method: "POST",
+    signal,
+    headers: ownerHeaders(ownerToken),
+  });
+}
+
+/** No owner token, no API key needed on the backend -- this is the public companion read. */
+export function getEscortStatus({ tripId, signal }) {
+  return request(`/escort/${tripId}`, { signal });
 }

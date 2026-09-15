@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Dashboard from "./routes/Dashboard.jsx";
+import EscortView from "./routes/EscortView.jsx";
 import Landing from "./routes/Landing.jsx";
 import Planner from "./routes/Planner.jsx";
 
@@ -10,6 +11,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/plan" element={<Planner />} />
       <Route path="/routes" element={<Dashboard />} />
+      <Route path="/escort/:tripId" element={<EscortView />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

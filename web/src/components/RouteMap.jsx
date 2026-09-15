@@ -106,6 +106,7 @@ export default function RouteMap({
   layoutKey,
   walkedPath,
   rerouteCoordinates,
+  previewCoordinates,
   offRoute,
 }) {
   return (
@@ -139,6 +140,12 @@ export default function RouteMap({
           </Polyline>
         );
       })}
+
+      {/* A plan shown for context only — no scoring of its own here (the
+          companion view has no route search), just where you said you'd be. */}
+      {previewCoordinates?.length > 1 && (
+        <Polyline positions={previewCoordinates} pathOptions={{ color: "#8a8fa3", weight: 4, opacity: 0.6, dashArray: "1 8" }} />
+      )}
 
       {/* The ground already covered on this walk — solid, behind everything else. */}
       {walkedPath?.length > 1 && (

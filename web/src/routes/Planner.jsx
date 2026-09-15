@@ -17,13 +17,14 @@ import SafetyKit from "../components/SafetyKit.jsx";
 import TimeChoice, { resolveDeparture } from "../components/TimeChoice.jsx";
 import WalkingHUD from "../components/WalkingHUD.jsx";
 import { useHealth } from "../hooks/useHealth.js";
+import { useEscort } from "../hooks/useEscort.js";
 import { useRouteSearch } from "../hooks/useRouteSearch.js";
 import { useWalkingMode } from "../hooks/useWalkingMode.js";
+import { sampleRoutePoints } from "../lib/routing.js";
 import { USABLE_ACCURACY_M, describeAccuracy, getAccurateLocation, watchLocation } from "../lib/geolocation.js";
 import { geocode } from "../lib/places.js";
 import { hasRoutingKey } from "../lib/routing.js";
 import { readSearchParams, writeSearchParams } from "../lib/searchParams.js";
-import { sampleRoutePoints } from "../lib/routing.js";
 import {
   loadRecentPlaces,
   loadSavedPlace,
@@ -174,10 +175,38 @@ export default function Planner() {
     walking.start();
   }, [selected, walking]);
 
+  const escort = useEscort();
+
   const endWalking = useCallback(() => {
     walking.stop();
     setWalkEntry(null);
-  }, [walking]);
+    if (escort.active) escort.stop();
+  }, [walking, escort]);
+
+  const startEscort = useCallback(() => {
+    if (!walkEntry) return;
+    escort.start({
+      destination: to,
+      routePreview: sampleRoutePoints(walkEntry.route.coordinates, 40),
+      checkInIntervalSeconds: 600,
+    });
+  }, [escort, walkEntry, to]);
+
+  const triggerSos = useCallback(() => {
+    const pos = walking.position;
+    escort.sos(pos?.lat, pos?.lon);
+  }, [escort, walking.position]);
+
+  // Feed the escort session whatever the walk already knows — same fix,
+  // same score, just also handed to whoever's watching the link.
+  useEffect(() => {
+    if (!escort.active || !walking.position) return;
+    escort.reportPosition(walking.position.lat, walking.position.lon, {
+      riskLabel: walking.currentScore?.label,
+      riskScore: walking.currentScore?.overall_risk_score,
+      progressFraction: walking.onRouteState?.progressFraction,
+    });
+  }, [escort, walking.position, walking.currentScore, walking.onRouteState]);
 
   const handleAcceptReroute = useCallback(() => {
     const accepted = walking.acceptReroute();
@@ -340,7 +369,17 @@ export default function Planner() {
             </Alert>
           )}
 
-          {walking.active && <WalkingHUD walking={walking} onEnd={endWalking} onAcceptReroute={handleAcceptReroute} />}
+          {walking.active && (
+            <WalkingHUD
+              walking={walking}
+              onEnd={endWalking}
+              onAcceptReroute={handleAcceptReroute}
+              escort={escort}
+              onStartEscort={startEscort}
+              onSos={triggerSos}
+              escortBusy={escort.busy}
+            />
+          )}
 
           {!walking.active && home && (
             <button
