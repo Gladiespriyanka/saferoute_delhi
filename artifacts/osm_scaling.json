@@ -1,0 +1,12 @@
+{
+  "radius_km": 0.4,
+  "snapshot": [
+    "2026-09-13"
+  ],
+  "scaling": {
+    "street_lamp": 3.8509876316718423,
+    "surveillance": 4.292837716014308,
+    "activity": 3.8390296512699704
+  },
+  "infra_prior": 0.3855
+}
