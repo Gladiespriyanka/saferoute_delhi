@@ -18,6 +18,25 @@ const CHECKIN_GRACE_MS = 90000;
 const POSITION_MIN_MS = 20000;
 const POSITION_MIN_M = 40;
 
+/** A dropped position update isn't worth chasing — another fix is coming
+ *  in ~20s anyway. A dropped SOS or check-in is a different story: nothing
+ *  else will resend it, so those get real retries with backoff before we
+ *  give up and just surface the failure. */
+const CRITICAL_RETRY_DELAYS_MS = [2000, 5000, 12000, 25000];
+
+async function withRetry(fn, delays = CRITICAL_RETRY_DELAYS_MS) {
+  let lastErr;
+  for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      if (attempt < delays.length) await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+    }
+  }
+  throw lastErr;
+}
+
 /**
  * A Smart Escort session: a trusted contact follows a live, unguessable
  * link while you walk. This hook owns the session's lifecycle on the
@@ -30,6 +49,12 @@ export function useEscort() {
   const [checkInDue, setCheckInDue] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  // Reflects the *last write*, not a live socket — with an 8s poll on the
+  // companion side, this is the walker's only early warning that updates
+  // aren't landing, so it stays visible in the UI rather than silently
+  // logged. See CompanionShare's "Reconnecting…" pill.
+  const [connected, setConnected] = useState(true);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
 
   const checkInTimerRef = useRef(null);
   const graceTimerRef = useRef(null);
@@ -48,7 +73,11 @@ export function useEscort() {
   }, []);
 
   // An unanswered prompt escalates on its own — a companion shouldn't have
-  // to wonder whether "no reply" meant "fine, just didn't see it".
+  // to wonder whether "no reply" meant "fine, just didn't see it". But a
+  // miss isn't the end of the session: the walker might just have had their
+  // phone locked or a dead signal, so the cycle keeps going afterwards —
+  // otherwise the very first missed prompt would permanently strand the
+  // session in "alert" with no way for the walker to ever check in again.
   useEffect(() => {
     if (!checkInDue || !session) return undefined;
     graceTimerRef.current = setTimeout(async () => {
@@ -58,10 +87,12 @@ export function useEscort() {
         setStatus(result);
       } catch {
         // Best-effort; the companion's own view will also go stale, which is itself a signal.
+      } finally {
+        scheduleCheckIn(session.checkInIntervalSeconds);
       }
     }, CHECKIN_GRACE_MS);
     return () => clearTimeout(graceTimerRef.current);
-  }, [checkInDue, session]);
+  }, [checkInDue, session, scheduleCheckIn]);
 
   const start = useCallback(
     async ({ destination, routePreview, checkInIntervalSeconds = 600 }) => {
@@ -78,6 +109,8 @@ export function useEscort() {
         setSession(next);
         setStatus(null);
         setCheckInDue(false);
+        setConnected(true);
+        setLastSyncedAt(Date.now());
         lastPositionRef.current = { at: 0, lat: null, lon: null };
         scheduleCheckIn(next.checkInIntervalSeconds);
         return next;
@@ -103,6 +136,8 @@ export function useEscort() {
     setSession(null);
     setStatus(null);
     setCheckInDue(false);
+    setConnected(true);
+    setLastSyncedAt(null);
   }, [session, clearTimers]);
 
   const reportPosition = useCallback(
@@ -112,9 +147,17 @@ export function useEscort() {
       const movedM = last.lat != null ? haversineMeters({ lat, lon }, { lat: last.lat, lon: last.lon }) : Infinity;
       if (!force && Date.now() - last.at < POSITION_MIN_MS && movedM < POSITION_MIN_M) return;
       lastPositionRef.current = { at: Date.now(), lat, lon };
+      // Not retried on failure — another fix (and another call here) is
+      // coming within POSITION_MIN_MS anyway, so a retry queue would just
+      // duplicate work the normal cadence already does. `connected` still
+      // flips false so the walker isn't left thinking this one landed.
       updateEscortPosition({ tripId: session.tripId, ownerToken: session.ownerToken, lat, lon, riskLabel, riskScore, progressFraction })
-        .then(setStatus)
-        .catch(() => {});
+        .then((result) => {
+          setStatus(result);
+          setConnected(true);
+          setLastSyncedAt(Date.now());
+        })
+        .catch(() => setConnected(false));
     },
     [session],
   );
@@ -125,10 +168,18 @@ export function useEscort() {
       clearTimeout(graceTimerRef.current);
       setCheckInDue(false);
       try {
-        const result = await checkInEscort({ tripId: session.tripId, ownerToken: session.ownerToken, ok });
+        // A "still okay?" answer only ever gets sent once by the person
+        // tapping it — worth a few retries on a flaky signal rather than
+        // silently dropping the one honest "I'm fine" they gave.
+        const result = await withRetry(() =>
+          checkInEscort({ tripId: session.tripId, ownerToken: session.ownerToken, ok }),
+        );
         setStatus(result);
+        setConnected(true);
+        setLastSyncedAt(Date.now());
         if (ok) scheduleCheckIn(session.checkInIntervalSeconds);
       } catch (e) {
+        setConnected(false);
         setError(e);
       }
     },
@@ -142,10 +193,17 @@ export function useEscort() {
       clearTimeout(graceTimerRef.current);
       setCheckInDue(false);
       try {
-        const result = await sosEscort({ tripId: session.tripId, ownerToken: session.ownerToken, lat, lon });
+        // The single most important call this hook makes — retried harder
+        // than anything else before giving up on it.
+        const result = await withRetry(() =>
+          sosEscort({ tripId: session.tripId, ownerToken: session.ownerToken, lat, lon }),
+        );
         setStatus(result);
+        setConnected(true);
+        setLastSyncedAt(Date.now());
         return result;
       } catch (e) {
+        setConnected(false);
         setError(e);
         return null;
       }
@@ -162,6 +220,8 @@ export function useEscort() {
     checkInDue,
     busy,
     error,
+    connected,
+    lastSyncedAt,
     shareUrl,
     start,
     stop,

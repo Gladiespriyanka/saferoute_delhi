@@ -23,6 +23,12 @@ const RESCORE_MIN_M = 40;
  *  heads-up even if you're still on the line — conditions change. */
 const RISK_JUMP_ALERT = 0.15;
 
+/** Once we've warned about a given condition, don't repeat the same warning
+ *  again until this long has passed — even if the next rescore tick still
+ *  finds it true. Without this, standing in one unsafe spot for a few
+ *  minutes spams a near-identical toast on every rescore. */
+const ALERT_REPEAT_COOLDOWN_MS = 120000;
+
 let nextAlertId = 1;
 
 /**
@@ -54,6 +60,9 @@ export function useWalkingMode({ entry, to, mode = "walk" }) {
 
   const offRouteSinceRef = useRef(null);
   const lastScoredRef = useRef({ at: 0, lat: null, lon: null });
+  // Last time each *kind* of alert fired, so a condition that's still true
+  // on the next rescore doesn't re-announce itself every tick.
+  const lastAlertAtRef = useRef({});
   const rerouteRef = useRef(null);
   const reroutingRef = useRef(false);
   useEffect(() => {
@@ -67,6 +76,22 @@ export function useWalkingMode({ entry, to, mode = "walk" }) {
     const alert = { id: nextAlertId++, tone, text, at: Date.now() };
     setAlerts((prev) => [...prev.slice(-4), alert]);
   }, []);
+
+  /** Same as pushAlert, but for conditions that can stay true across many
+   *  rescore ticks (e.g. "still Unsafe here", "still reading riskier").
+   *  Fires once, then stays quiet on repeat confirmations of the *same*
+   *  category until ALERT_REPEAT_COOLDOWN_MS has passed. A different
+   *  category (or the same one after the cooldown) always gets through. */
+  const pushAlertOnce = useCallback(
+    (category, tone, text) => {
+      const now = Date.now();
+      const last = lastAlertAtRef.current[category] || 0;
+      if (now - last < ALERT_REPEAT_COOLDOWN_MS) return;
+      lastAlertAtRef.current[category] = now;
+      pushAlert(tone, text);
+    },
+    [pushAlert],
+  );
 
   const dismissAlert = useCallback((id) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
@@ -89,15 +114,20 @@ export function useWalkingMode({ entry, to, mode = "walk" }) {
           : null;
 
         if (result.label === "Unsafe") {
-          pushAlert("error", "This stretch is scoring Unsafe right now — stay aware of your surroundings.");
+          pushAlertOnce("unsafe", "error", "This stretch is scoring Unsafe right now — stay aware of your surroundings.");
         } else if (baseline && result.overall_risk_score - baseline.risk_score >= RISK_JUMP_ALERT) {
-          pushAlert("warn", "It's reading riskier here than the route was scored for.");
+          pushAlertOnce("riskier", "warn", "It's reading riskier here than the route was scored for.");
+        } else {
+          // Back to normal here — let the next genuine escalation announce itself immediately
+          // rather than waiting out a cooldown that started while conditions were still bad.
+          delete lastAlertAtRef.current.unsafe;
+          delete lastAlertAtRef.current.riskier;
         }
       } catch {
         // A missed rescore shouldn't interrupt a walk; the next fix tries again.
       }
     },
-    [pushAlert],
+    [pushAlertOnce],
   );
 
   /** Find, score, and offer the best walk from wherever you are now to the destination. */
@@ -200,6 +230,7 @@ export function useWalkingMode({ entry, to, mode = "walk" }) {
     setOnRouteState(null);
     offRouteSinceRef.current = null;
     lastScoredRef.current = { at: 0, lat: null, lon: null };
+    lastAlertAtRef.current = {};
     setActive(true);
   }, []);
 

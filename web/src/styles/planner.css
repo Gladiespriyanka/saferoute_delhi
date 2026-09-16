@@ -43,6 +43,35 @@
   background: var(--paper-2);
 }
 
+/* The walker's live position on both the walking-mode map and the
+   companion's EscortView map. RouteMap.jsx renders this as a bare
+   <span class="mapLive__dot"> inside an L.divIcon -- with no rule for it,
+   the marker is present in the DOM but has zero size and no fill, so it's
+   completely invisible next to the (inline-styled, and so always visible)
+   start/end pins. This is what actually makes the marker itself visible. */
+.mapLive__dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2f7de1;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 4px rgba(47, 125, 225, 0.35), 0 1px 4px rgba(19, 23, 34, 0.4);
+  animation: mapLivePulse 2s ease-out infinite;
+}
+
+@keyframes mapLivePulse {
+  0% {
+    box-shadow: 0 0 0 4px rgba(47, 125, 225, 0.35), 0 1px 4px rgba(19, 23, 34, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(47, 125, 225, 0), 0 1px 4px rgba(19, 23, 34, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(47, 125, 225, 0), 0 1px 4px rgba(19, 23, 34, 0.4);
+  }
+}
+
 .planner__body {
   flex: 1;
   padding: var(--s-6) var(--gutter) var(--s-7);
@@ -785,6 +814,14 @@
   color: var(--muted);
 }
 
+.companionShare__offline {
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--moderate-tint);
+  color: var(--moderate-deep);
+  font-size: var(--t-sm);
+}
 .panelCard__lede {
   margin: calc(-1 * var(--s-2)) 0 var(--s-3);
   font-size: var(--t-sm);

@@ -59,6 +59,13 @@ export default function CompanionShare({ escort, onStart, onSos, busy }) {
         </button>
       </div>
 
+      {!escort.connected && (
+        <p className="companionShare__offline" role="status">
+          Reconnecting — your last update to {contact ? "your contact" : "the person following this"} may not have
+          gone through yet. Still trying in the background.
+        </p>
+      )}
+
       {escort.checkInDue && (
         <div className="companionShare__checkin" role="alert">
           <p>Still doing okay?</p>

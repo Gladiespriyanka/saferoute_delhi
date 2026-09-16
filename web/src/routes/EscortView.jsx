@@ -5,6 +5,7 @@ import RouteMap from "../components/RouteMap.jsx";
 import { EMERGENCY_NUMBERS } from "../lib/config.js";
 import { pct } from "../lib/format.js";
 import { getEscortStatus } from "../lib/api.js";
+import { useAlertNotice } from "../hooks/useAlertNotice.js";
 
 const POLL_MS = 8000;
 
@@ -65,6 +66,8 @@ export default function EscortView() {
       clearTimeout(timerRef.current);
     };
   }, [tripId]);
+
+  useAlertNotice(status?.status, status?.destination?.label);
 
   if (notFound) {
     return (

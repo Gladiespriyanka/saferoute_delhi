@@ -53,7 +53,7 @@ const TILES = {
 };
 
 /** Keep the viewport on whatever is currently worth looking at. */
-function Viewport({ routes, selectedId, from, to }) {
+function Viewport({ routes, selectedId, from, to, live }) {
   const map = useMap();
 
   useEffect(() => {
@@ -65,10 +65,14 @@ function Viewport({ routes, selectedId, from, to }) {
       });
       return;
     }
-    const pins = [from, to].filter(Boolean).map((place) => [place.lat, place.lon]);
-    if (pins.length === 2) map.fitBounds(L.latLngBounds(pins), { padding: [64, 64] });
+    // No route to frame -- this is the companion view's case (EscortView
+    // passes no `routes` and no `from`). Follow the walker's live position
+    // as it comes in, rather than freezing on wherever the map first
+    // pointed: otherwise the marker just drifts out of frame as they move.
+    const pins = [from, to, live].filter(Boolean).map((place) => [place.lat, place.lon]);
+    if (pins.length >= 2) map.fitBounds(L.latLngBounds(pins), { padding: [64, 64] });
     else if (pins.length === 1) map.setView(pins[0], 15);
-  }, [map, routes, selectedId, from, to]);
+  }, [map, routes, selectedId, from, to, live]);
 
   return null;
 }
@@ -147,9 +151,16 @@ export default function RouteMap({
         <Polyline positions={previewCoordinates} pathOptions={{ color: "#8a8fa3", weight: 4, opacity: 0.6, dashArray: "1 8" }} />
       )}
 
-      {/* The ground already covered on this walk — solid, behind everything else. */}
-      {walkedPath?.length > 1 && (
-        <Polyline positions={walkedPath} pathOptions={{ color: "#2f7de1", weight: 5, opacity: 0.85 }} />
+      {/* The ground already covered on this walk — solid, behind everything
+          else. An array of segments, not one flat trail: a GPS glitch or a
+          route switch can jump the fix a long way, and a lone segment break
+          there is honest about it instead of drawing a straight line across
+          the map to bridge the gap. */}
+      {walkedPath?.some((segment) => segment.length > 1) && (
+        <Polyline
+          positions={walkedPath.filter((segment) => segment.length > 1)}
+          pathOptions={{ color: "#2f7de1", weight: 5, opacity: 0.85 }}
+        />
       )}
 
       {/* A computed alternative from wherever you are now, dashed until accepted. */}
@@ -182,7 +193,7 @@ export default function RouteMap({
         </>
       )}
 
-      <Viewport routes={routes} selectedId={selectedId} from={from} to={to} />
+      <Viewport routes={routes} selectedId={selectedId} from={from} to={to} live={live} />
       <FlyToFix fix={focusFix} />
       <ResizeOnLayout dependency={layoutKey} />
     </MapContainer>
