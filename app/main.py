@@ -9,18 +9,25 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import __version__
-from app.config import CORS_ALLOW_ORIGINS
+from app.config import CORS_ALLOW_ORIGINS, ESCORT_TTL_SECONDS
 from app.schemas import (
     AuditRecord,
     CompareRoutesRequest,
     CompareRoutesResponse,
     ContextAdjustment,
+    EscortCheckIn,
+    EscortEvent,
+    EscortPositionUpdate,
+    EscortStartRequest,
+    EscortStartResponse,
+    EscortStatusResponse,
     FeatureContribution,
     FeedbackRequest,
     FeedbackResponse,
@@ -36,7 +43,7 @@ from app.schemas import (
     SegmentScore,
 )
 from app.security import require_api_key
-from app.service import ModelNotTrainedError, SafeRouteService
+from app.service import EscortAuthError, EscortNotFoundError, ModelNotTrainedError, SafeRouteService
 
 log = logging.getLogger(__name__)
 
@@ -84,7 +91,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ALLOW_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["content-type", "x-api-key"],
+    allow_headers=["content-type", "x-api-key", "x-owner-token"],
 )
 
 
@@ -96,6 +103,38 @@ async def _model_not_trained(_: Request, exc: ModelNotTrainedError) -> JSONRespo
 @app.exception_handler(ValueError)
 async def _bad_value(_: Request, exc: ValueError) -> JSONResponse:
     return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+
+@app.exception_handler(EscortNotFoundError)
+async def _escort_not_found(_: Request, exc: EscortNotFoundError) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"detail": "Escort session not found, ended, or expired."})
+
+
+@app.exception_handler(EscortAuthError)
+async def _escort_auth_error(_: Request, exc: EscortAuthError) -> JSONResponse:
+    return JSONResponse(status_code=403, content={"detail": str(exc)})
+
+
+def _owner_token(x_owner_token: str | None = Header(None, alias="x-owner-token")) -> str | None:
+    return x_owner_token
+
+
+def _escort_schema(session: dict) -> EscortStatusResponse:
+    return EscortStatusResponse(
+        trip_id=session["trip_id"],
+        status=session["status"],
+        started_at=session["started_at"],
+        last_update_at=session["last_update_at"],
+        check_in_interval_seconds=session["check_in_interval_seconds"],
+        next_check_in_due_at=session.get("next_check_in_due_at"),
+        destination=session.get("destination"),
+        route_preview=session.get("route_preview"),
+        last_point=session.get("last_point"),
+        risk_label=session.get("risk_label"),
+        risk_score=session.get("risk_score"),
+        progress_fraction=session.get("progress_fraction"),
+        events=[EscortEvent(**e) for e in session["events"]],
+    )
 
 
 def _segment_schema(result: dict) -> SegmentScore:
@@ -258,3 +297,101 @@ def _audit_schema(record: dict) -> AuditRecord:
         timestamp=record["timestamp"],
         distance_km=round(float(record["distance_km"]), 3),
     )
+
+
+# ----------------------------------------------------------------------
+# Smart Escort Mode
+#
+# /escort/start and every /escort/{trip_id}/... write both require the
+# app's own x-api-key (like the rest of the API) *and* the trip's
+# owner_token, which never leaves the walker's browser. GET /escort/{id}
+# is the one deliberately unauthenticated route in this API: it's the
+# read-only link a trusted contact opens with nothing but the link itself.
+# ----------------------------------------------------------------------
+@app.post("/escort/start", response_model=EscortStartResponse, tags=["escort"])
+def start_escort(
+    request: EscortStartRequest,
+    _: str = Depends(require_api_key),
+    svc: SafeRouteService = Depends(get_service),
+) -> EscortStartResponse:
+    """Begin a live-tracking session a trusted contact can follow via link."""
+    session = svc.start_escort(
+        destination=request.destination,
+        check_in_interval_seconds=request.check_in_interval_seconds,
+        route_preview=request.route_preview,
+    )
+    return EscortStartResponse(
+        trip_id=session["trip_id"],
+        owner_token=session["owner_token"],
+        created_at=session["started_at"],
+        check_in_interval_seconds=session["check_in_interval_seconds"],
+        expires_at=session["started_at"] + timedelta(seconds=ESCORT_TTL_SECONDS),
+    )
+
+
+@app.post("/escort/{trip_id}/position", response_model=EscortStatusResponse, tags=["escort"])
+def update_escort_position(
+    trip_id: str,
+    request: EscortPositionUpdate,
+    owner_token: str | None = Depends(_owner_token),
+    _: str = Depends(require_api_key),
+    svc: SafeRouteService = Depends(get_service),
+) -> EscortStatusResponse:
+    """Push the walker's current point and latest score into the session."""
+    session = svc.update_escort_position(
+        trip_id, owner_token, request.point, request.risk_label, request.risk_score, request.progress_fraction
+    )
+    return _escort_schema(session)
+
+
+@app.post("/escort/{trip_id}/checkin", response_model=EscortStatusResponse, tags=["escort"])
+def check_in_escort(
+    trip_id: str,
+    request: EscortCheckIn,
+    owner_token: str | None = Depends(_owner_token),
+    _: str = Depends(require_api_key),
+    svc: SafeRouteService = Depends(get_service),
+) -> EscortStatusResponse:
+    """Answer a periodic 'still okay?' prompt."""
+    return _escort_schema(svc.check_in_escort(trip_id, owner_token, request.ok))
+
+
+@app.post("/escort/{trip_id}/missed-checkin", response_model=EscortStatusResponse, tags=["escort"])
+def missed_check_in_escort(
+    trip_id: str,
+    owner_token: str | None = Depends(_owner_token),
+    _: str = Depends(require_api_key),
+    svc: SafeRouteService = Depends(get_service),
+) -> EscortStatusResponse:
+    """The client calls this itself when a check-in prompt times out unanswered."""
+    return _escort_schema(svc.missed_check_in_escort(trip_id, owner_token))
+
+
+@app.post("/escort/{trip_id}/sos", response_model=EscortStatusResponse, tags=["escort"])
+def sos_escort(
+    trip_id: str,
+    request: EscortPositionUpdate | None = None,
+    owner_token: str | None = Depends(_owner_token),
+    _: str = Depends(require_api_key),
+    svc: SafeRouteService = Depends(get_service),
+) -> EscortStatusResponse:
+    """One-tap distress signal; flips the session to 'alert' immediately."""
+    point = request.point if request else None
+    return _escort_schema(svc.sos_escort(trip_id, owner_token, point))
+
+
+@app.post("/escort/{trip_id}/end", response_model=EscortStatusResponse, tags=["escort"])
+def end_escort(
+    trip_id: str,
+    owner_token: str | None = Depends(_owner_token),
+    _: str = Depends(require_api_key),
+    svc: SafeRouteService = Depends(get_service),
+) -> EscortStatusResponse:
+    """Arrived safely — close out the session."""
+    return _escort_schema(svc.end_escort(trip_id, owner_token))
+
+
+@app.get("/escort/{trip_id}", response_model=EscortStatusResponse, tags=["escort"])
+def escort_status(trip_id: str, svc: SafeRouteService = Depends(get_service)) -> EscortStatusResponse:
+    """Read-only status for the companion view. No API key: the trip id is the capability."""
+    return _escort_schema(svc.get_escort_status(trip_id))

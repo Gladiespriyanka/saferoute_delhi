@@ -9,10 +9,11 @@ the spatial indices are loaded once, not per request.
 from __future__ import annotations
 
 import logging
+import secrets
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pandas as pd
@@ -20,6 +21,8 @@ import pandas as pd
 from app.config import (
     AUDIT_EMA_ALPHA,
     AUDITS_STORE_PATH,
+    ESCORT_TIMELINE_LIMIT,
+    ESCORT_TTL_SECONDS,
     MAX_AUDIT_ADJUSTMENT,
     MODERATE_UPPER_BOUND,
     RISK_LABELS,
@@ -69,6 +72,14 @@ class ModelNotTrainedError(RuntimeError):
     """Raised when a prediction is attempted before a model exists."""
 
 
+class EscortNotFoundError(LookupError):
+    """Raised when a trip id doesn't name a live (or not yet expired) escort session."""
+
+
+class EscortAuthError(PermissionError):
+    """Raised when a write is attempted with a missing or wrong owner token."""
+
+
 def label_for_score(score: float) -> str:
     if score <= SAFE_UPPER_BOUND:
         return RISK_LABELS[0]
@@ -102,6 +113,10 @@ class SafeRouteService:
         # at startup -- keeping it purely in memory meant every restart
         # silently discarded the community's accumulated feedback.
         self._area_audit_adjustment = self._rebuild_audit_adjustments()
+
+        # Smart Escort Mode: in-memory only, see app/config.ESCORT_TTL_SECONDS.
+        self._escort_lock = threading.Lock()
+        self._escorts: dict[str, dict] = {}
 
     # ------------------------------------------------------------------
     # Provenance
@@ -543,3 +558,116 @@ class SafeRouteService:
         subset["distance_km"] = nearest[mask]
         subset = subset.sort_values("timestamp", ascending=False, kind="stable").head(limit)
         return _audit_records(subset)
+
+    # ------------------------------------------------------------------
+    # Smart Escort Mode
+    # ------------------------------------------------------------------
+    def _prune_escorts_locked(self) -> None:
+        """Caller must hold `_escort_lock`. Drops sessions untouched past the TTL."""
+        cutoff = datetime.now(timezone.utc) - timedelta(seconds=ESCORT_TTL_SECONDS)
+        stale = [tid for tid, session in self._escorts.items() if session["last_update_at"] < cutoff]
+        for tid in stale:
+            del self._escorts[tid]
+
+    def _push_event(self, session: dict, kind: str, text: str) -> None:
+        now = datetime.now(timezone.utc)
+        session["events"].append({"at": now, "kind": kind, "text": text})
+        session["events"] = session["events"][-ESCORT_TIMELINE_LIMIT:]
+        session["last_update_at"] = now
+
+    def _get_escort_locked(self, trip_id: str) -> dict:
+        session = self._escorts.get(trip_id)
+        if session is None:
+            raise EscortNotFoundError(trip_id)
+        return session
+
+    def _authorize_escort_locked(self, trip_id: str, owner_token: str | None) -> dict:
+        session = self._get_escort_locked(trip_id)
+        if not secrets.compare_digest(owner_token or "", session["owner_token"]):
+            raise EscortAuthError("Wrong or missing escort token for this trip.")
+        return session
+
+    def start_escort(self, destination, check_in_interval_seconds: int, route_preview) -> dict:
+        with self._escort_lock:
+            self._prune_escorts_locked()
+            now = datetime.now(timezone.utc)
+            session = {
+                "trip_id": uuid.uuid4().hex,
+                "owner_token": uuid.uuid4().hex,
+                "status": "active",
+                "started_at": now,
+                "last_update_at": now,
+                "check_in_interval_seconds": check_in_interval_seconds,
+                "next_check_in_due_at": now + timedelta(seconds=check_in_interval_seconds),
+                "destination": destination,
+                "route_preview": route_preview,
+                "last_point": None,
+                "risk_label": None,
+                "risk_score": None,
+                "progress_fraction": None,
+                "events": [{"at": now, "kind": "started", "text": "Escort started."}],
+            }
+            self._escorts[session["trip_id"]] = session
+            return session
+
+    def update_escort_position(
+        self, trip_id: str, owner_token: str | None, point, risk_label, risk_score, progress_fraction
+    ) -> dict:
+        with self._escort_lock:
+            session = self._authorize_escort_locked(trip_id, owner_token)
+            if session["status"] == "ended":
+                raise EscortNotFoundError(trip_id)
+            session["last_point"] = point
+            if risk_label is not None:
+                session["risk_label"] = risk_label
+            if risk_score is not None:
+                session["risk_score"] = risk_score
+            if progress_fraction is not None:
+                session["progress_fraction"] = progress_fraction
+            session["last_update_at"] = datetime.now(timezone.utc)
+            return session
+
+    def check_in_escort(self, trip_id: str, owner_token: str | None, ok: bool) -> dict:
+        with self._escort_lock:
+            session = self._authorize_escort_locked(trip_id, owner_token)
+            if ok:
+                session["status"] = "active"
+                session["next_check_in_due_at"] = datetime.now(timezone.utc) + timedelta(
+                    seconds=session["check_in_interval_seconds"]
+                )
+                self._push_event(session, "checkin_ok", "Checked in — doing fine.")
+            else:
+                session["status"] = "alert"
+                self._push_event(session, "checkin_missed", "Reported not okay during a check-in.")
+            return session
+
+    def missed_check_in_escort(self, trip_id: str, owner_token: str | None) -> dict:
+        with self._escort_lock:
+            session = self._authorize_escort_locked(trip_id, owner_token)
+            session["status"] = "alert"
+            self._push_event(session, "checkin_missed", "Missed a scheduled check-in.")
+            return session
+
+    def sos_escort(self, trip_id: str, owner_token: str | None, point=None) -> dict:
+        with self._escort_lock:
+            session = self._authorize_escort_locked(trip_id, owner_token)
+            session["status"] = "alert"
+            if point is not None:
+                session["last_point"] = point
+            self._push_event(session, "sos", "SOS triggered.")
+            return session
+
+    def end_escort(self, trip_id: str, owner_token: str | None) -> dict:
+        with self._escort_lock:
+            session = self._authorize_escort_locked(trip_id, owner_token)
+            session["status"] = "ended"
+            self._push_event(session, "ended", "Escort ended.")
+            return session
+
+    def get_escort_status(self, trip_id: str) -> dict:
+        """Deliberately unauthenticated: the trip id itself is the capability
+        a companion needs, so they can open the link with no account and no
+        API key."""
+        with self._escort_lock:
+            self._prune_escorts_locked()
+            return self._get_escort_locked(trip_id)

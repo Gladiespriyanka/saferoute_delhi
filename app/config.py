@@ -158,3 +158,12 @@ POI_CATEGORIES = ("metro", "bus_stop", "hospital", "police")
 POI_DISTANCE_SOFT_CAP_KM = 3.0
 
 RANDOM_SEED = _env_int("SAFEROUTE_SEED", 42)
+
+#Smart Escort Mode: ephemeral live-tracking sessions a trusted contact can
+# open via an unguessable link, with no account of their own. Kept in
+# memory only -- a session is meant to outlive one walk, not a server
+# restart, and persisting live-location data to disk would be a strange
+# thing to do by default in a safety app.
+ESCORT_TTL_SECONDS = _env_int("SAFEROUTE_ESCORT_TTL_SECONDS", 6 * 3600)
+ESCORT_TIMELINE_LIMIT = 40
+ESCORT_DEFAULT_CHECKIN_SECONDS = 600

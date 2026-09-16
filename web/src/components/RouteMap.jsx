@@ -95,7 +95,20 @@ function ResizeOnLayout({ dependency }) {
   return null;
 }
 
-export default function RouteMap({ routes, selectedId, onSelect, from, to, live, focusFix, layoutKey }) {
+export default function RouteMap({
+  routes,
+  selectedId,
+  onSelect,
+  from,
+  to,
+  live,
+  focusFix,
+  layoutKey,
+  walkedPath,
+  rerouteCoordinates,
+  previewCoordinates,
+  offRoute,
+}) {
   return (
     <MapContainer
       className="routeMap"
@@ -128,6 +141,25 @@ export default function RouteMap({ routes, selectedId, onSelect, from, to, live,
         );
       })}
 
+      {/* A plan shown for context only — no scoring of its own here (the
+          companion view has no route search), just where you said you'd be. */}
+      {previewCoordinates?.length > 1 && (
+        <Polyline positions={previewCoordinates} pathOptions={{ color: "#8a8fa3", weight: 4, opacity: 0.6, dashArray: "1 8" }} />
+      )}
+
+      {/* The ground already covered on this walk — solid, behind everything else. */}
+      {walkedPath?.length > 1 && (
+        <Polyline positions={walkedPath} pathOptions={{ color: "#2f7de1", weight: 5, opacity: 0.85 }} />
+      )}
+
+      {/* A computed alternative from wherever you are now, dashed until accepted. */}
+      {rerouteCoordinates?.length > 1 && (
+        <Polyline
+          positions={rerouteCoordinates}
+          pathOptions={{ color: ROUTE_COLORS.safe, weight: 5, opacity: 0.9, dashArray: "2 10" }}
+        />
+      )}
+
       {from && <Marker position={[from.lat, from.lon]} icon={START_ICON} />}
       {to && <Marker position={[to.lat, to.lon]} icon={END_ICON} />}
       {live && (
@@ -137,7 +169,12 @@ export default function RouteMap({ routes, selectedId, onSelect, from, to, live,
             <Circle
               center={[live.lat, live.lon]}
               radius={live.accuracy}
-              pathOptions={{ color: "#2f7de1", weight: 1.5, opacity: 0.6, fillOpacity: live.accuracy > 1500 ? 0.06 : 0.1 }}
+              pathOptions={{
+                color: offRoute ? ROUTE_COLORS.unsafe : "#2f7de1",
+                weight: 1.5,
+                opacity: 0.6,
+                fillOpacity: live.accuracy > 1500 ? 0.06 : 0.1,
+              }}
               interactive={false}
             />
           )}
